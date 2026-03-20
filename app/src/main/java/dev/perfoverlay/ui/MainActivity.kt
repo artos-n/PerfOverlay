@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import dev.perfoverlay.data.*
 import dev.perfoverlay.service.OverlayService
+import dev.perfoverlay.service.ShizukuHelper
 import dev.perfoverlay.ui.component.GlassmorphismCard
 import dev.perfoverlay.ui.theme.*
 import kotlinx.coroutines.launch
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         configRepo = ConfigRepository(applicationContext)
+        ShizukuHelper.init(this)
 
         setContent {
             PerfOverlayTheme(darkTheme = true) {
@@ -62,6 +64,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        ShizukuHelper.destroy()
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun MainScreen() {
@@ -70,6 +77,7 @@ class MainActivity : ComponentActivity() {
         }
         var isServiceRunning by remember { mutableStateOf(OverlayService.isRunning) }
         val config by configRepo.config.collectAsState(initial = OverlayConfig())
+        val shizukuState by ShizukuHelper.state.collectAsState()
 
         // Live stats from service
         val liveStats by OverlayService.stats.collectAsState()
@@ -86,14 +94,24 @@ class MainActivity : ComponentActivity() {
 
             // Permission card
             if (!hasOverlayPermission) {
-                PermissionCard {
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:${packageName}")
-                    )
-                    overlayPermissionLauncher.launch(intent)
-                    hasOverlayPermission = Settings.canDrawOverlays(this@MainActivity)
-                }
+                PermissionCard(
+                    shizukuState = shizukuState,
+                    onGrantDirect = {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:${packageName}")
+                        )
+                        overlayPermissionLauncher.launch(intent)
+                        hasOverlayPermission = Settings.canDrawOverlays(this@MainActivity)
+                    },
+                    onGrantShizuku = {
+                        ShizukuHelper.grantOverlayPermission { granted ->
+                            if (granted) {
+                                hasOverlayPermission = Settings.canDrawOverlays(this@MainActivity)
+                            }
+                        }
+                    }
+                )
             }
 
             // Master toggle
@@ -125,6 +143,11 @@ class MainActivity : ComponentActivity() {
 
             // Refresh rate
             RefreshRateCard(config)
+
+            // Shizuku status (always visible if installed)
+            if (shizukuState != ShizukuHelper.State.NOT_INSTALLED) {
+                ShizukuStatusCard(shizukuState)
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -171,14 +194,17 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun PermissionCard(onRequest: () -> Unit) {
+    private fun PermissionCard(
+        shizukuState: ShizukuHelper.State,
+        onGrantDirect: () -> Unit,
+        onGrantShizuku: () -> Unit
+    ) {
         GlassmorphismCard(alpha = 0.9f) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -196,17 +222,42 @@ class MainActivity : ComponentActivity() {
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            "Tap to grant in Settings",
+                            "Needed to show stats on top of other apps",
                             fontSize = 12.sp,
                             color = Color.White.copy(alpha = 0.6f)
                         )
                     }
                 }
-                Button(
-                    onClick = onRequest,
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Grant")
+                    // Standard Settings grant
+                    Button(
+                        onClick = onGrantDirect,
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Settings")
+                    }
+
+                    // Shizuku grant (only show if Shizuku is running)
+                    if (shizukuState == ShizukuHelper.State.RUNNING) {
+                        Button(
+                            onClick = onGrantShizuku,
+                            colors = ButtonDefaults.buttonColors(containerColor = GlassPurple),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("⚡ Shizuku")
+                        }
+                    }
                 }
             }
         }
@@ -496,6 +547,66 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @Composable
+    private fun ShizukuStatusCard(state: ShizukuHelper.State) {
+        SectionLabel("SHIZUKU")
+        GlassmorphismCard(alpha = 0.8f) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Rounded.Bolt,
+                        contentDescription = null,
+                        tint = when (state) {
+                            ShizukuHelper.State.RUNNING -> AccentGreen
+                            ShizukuHelper.State.PERMISSION_DENIED -> AccentYellow
+                            ShizukuHelper.State.NOT_RUNNING -> Color.White.copy(alpha = 0.4f)
+                            else -> Color.White.copy(alpha = 0.3f)
+                        }
+                    )
+                    Column {
+                        Text(
+                            "Shizuku",
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            when (state) {
+                                ShizukuHelper.State.RUNNING -> "Connected — ready to grant permissions"
+                                ShizukuHelper.State.PERMISSION_DENIED -> "Permission denied — open Shizuku app"
+                                ShizukuHelper.State.NOT_RUNNING -> "Not running — start Shizuku first"
+                                ShizukuHelper.State.NOT_INSTALLED -> "Not installed"
+                            },
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                // Status indicator
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when (state) {
+                                ShizukuHelper.State.RUNNING -> AccentGreen
+                                ShizukuHelper.State.PERMISSION_DENIED -> AccentYellow
+                                else -> Color.White.copy(alpha = 0.3f)
+                            }
+                        )
+                )
             }
         }
     }

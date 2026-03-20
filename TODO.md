@@ -4,8 +4,9 @@
 - [x] ~~Build verification~~ — code verified, needs local `./gradlew assembleDebug`
 - [x] ~~Proper blur effect~~ — real frosted glass on Android 12+ using `RenderEffect.createBlurEffect()`
 - [x] ~~Overlay drag~~ — long-press to drag and reposition overlay anywhere on screen
+- [x] ~~Shizuku integration~~ — auto-grant overlay permission via Shizuku UserService + appops
 - [ ] **Per-app FPS** — detect which app is in foreground and track its frame rate separately
-- [ ] **Shizuku integration** — overlay via Shizuku so users don't need `SYSTEM_ALERT_WINDOW` permission
+- [ ] **Full Shizuku overlay** — create overlay windows directly via Shizuku (bypass SYSTEM_ALERT_WINDOW entirely)
 
 ## Medium Priority
 - [ ] **Per-app recording** — record stats per application, store in Room DB

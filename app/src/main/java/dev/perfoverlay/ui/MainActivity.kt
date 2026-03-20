@@ -291,6 +291,11 @@ class MainActivity : ComponentActivity() {
         GlassmorphismCard(alpha = 0.85f) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (config.showFps) LiveStatRow("FPS", "${stats.fps}", AccentGreen)
+                if (config.showFrameTime && stats.avgFrameTimeMs > 0) {
+                    val ftStr = "${String.format("%.1f", stats.avgFrameTimeMs)}ms" +
+                        if (stats.droppedFrames > 0) " (▼${stats.droppedFrames})" else ""
+                    LiveStatRow("FRAME", ftStr, if (stats.p95FrameTimeMs > 33f) AccentRed else AccentGreen)
+                }
                 if (config.showCpu) LiveStatRow("CPU", "${stats.cpuUsage.toInt()}% @ ${stats.cpuFrequency} MHz", AccentBlue)
                 if (config.showGpu) LiveStatRow("GPU", "${stats.gpuUsage.toInt()}%", AccentGreen)
                 if (config.showRam) LiveStatRow("RAM", "${stats.ramUsed} / ${stats.ramTotal} MB", GlassPurple)
@@ -323,6 +328,7 @@ class MainActivity : ComponentActivity() {
         GlassmorphismCard(alpha = 0.8f) {
             Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 StatToggle("FPS", Icons.Rounded.PlayArrow, config.showFps) { updateConfig(config.copy(showFps = it)) }
+                StatToggle("Frame Time", Icons.Rounded.Timeline, config.showFrameTime) { updateConfig(config.copy(showFrameTime = it)) }
                 StatToggle("CPU", Icons.Rounded.Memory, config.showCpu) { updateConfig(config.copy(showCpu = it)) }
                 StatToggle("GPU", Icons.Rounded.Games, config.showGpu) { updateConfig(config.copy(showGpu = it)) }
                 StatToggle("RAM", Icons.Rounded.Storage, config.showRam) { updateConfig(config.copy(showRam = it)) }

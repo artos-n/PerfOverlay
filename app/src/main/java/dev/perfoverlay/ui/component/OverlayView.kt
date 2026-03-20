@@ -3,6 +3,7 @@ package dev.perfoverlay.ui.component
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,7 +18,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
@@ -66,6 +71,17 @@ private fun FullOverlayView(
             verticalArrangement = Arrangement.spacedBy(6.dp * config.scale)
         ) {
             OverlayHeader(stats.fps, config.showFps, config.scale, theme)
+
+            if (config.showFrameTime && config.showFps) {
+                FrameTimeStrip(
+                    frameTimeStrip = stats.frameTimeStrip,
+                    avgFrameTimeMs = stats.avgFrameTimeMs,
+                    p95FrameTimeMs = stats.p95FrameTimeMs,
+                    droppedFrames = stats.droppedFrames,
+                    scale = config.scale,
+                    theme = theme
+                )
+            }
 
             if (config.showCpu) {
                 StatRow(
@@ -417,8 +433,135 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float, theme: OverlayThem
 }
 
 /**
- * Glassmorphism card with true frosted-glass effect.
- *
+ * Thin micro-graph strip showing per-frame durations below the FPS badge.
+ * Highlights dropped frames (red spikes) and shows P95 frame time.
+ * Only visible when showFrameTime is enabled in config.
+ */
+@Composable
+private fun FrameTimeStrip(
+    frameTimeStrip: FloatArray,
+    avgFrameTimeMs: Float,
+    p95FrameTimeMs: Float,
+    droppedFrames: Int,
+    scale: Float,
+    theme: OverlayTheme
+) {
+    if (frameTimeStrip.size < 2) return
+
+    val stripHeight = 20.dp * scale
+    val hasDrops = droppedFrames > 0
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(2.dp * scale)
+    ) {
+        // Stats row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "FT",
+                fontSize = (7.sp * scale),
+                color = Color.White.copy(alpha = 0.35f),
+                fontWeight = FontWeight.Medium,
+                letterSpacing = (1.sp * scale)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp * scale)) {
+                Text(
+                    text = "avg ${String.format("%.1f", avgFrameTimeMs)}ms",
+                    fontSize = (7.sp * scale),
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White.copy(alpha = 0.4f)
+                )
+                Text(
+                    text = "p95 ${String.format("%.1f", p95FrameTimeMs)}ms",
+                    fontSize = (7.sp * scale),
+                    fontFamily = FontFamily.Monospace,
+                    color = if (p95FrameTimeMs > 33f) theme.accentDanger else Color.White.copy(alpha = 0.4f)
+                )
+                if (hasDrops) {
+                    Text(
+                        text = "▼$droppedFrames",
+                        fontSize = (7.sp * scale),
+                        fontFamily = FontFamily.Monospace,
+                        color = theme.accentDanger,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Strip chart
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(stripHeight)
+                .clip(RoundedCornerShape(4.dp * scale))
+                .background(Color.White.copy(alpha = 0.04f))
+        ) {
+            val width = size.width
+            val height = size.height
+            val data = frameTimeStrip
+            if (data.size < 2) return@Canvas
+
+            // Y-axis: 0ms at bottom, cap at 50ms (3 frames at 60Hz)
+            val maxDisplayMs = 50f
+            val stepX = width / (data.size - 1).coerceAtLeast(1)
+
+            // Vsync line at 16.67ms
+            val vsyncY = height - (16.67f / maxDisplayMs * height)
+            drawLine(
+                color = Color.White.copy(alpha = 0.08f),
+                start = Offset(0f, vsyncY),
+                end = Offset(width, vsyncY),
+                strokeWidth = 1f
+            )
+
+            // Draw the frame time line
+            val path = Path()
+            data.forEachIndexed { index, frameTimeMs ->
+                val x = index * stepX
+                val y = height - (frameTimeMs.coerceIn(0f, maxDisplayMs) / maxDisplayMs * height)
+                if (index == 0) path.moveTo(x, y)
+                else {
+                    val prevX = (index - 1) * stepX
+                    val prevY = height - (data[index - 1].coerceIn(0f, maxDisplayMs) / maxDisplayMs * height)
+                    val midX = (prevX + x) / 2f
+                    path.quadraticBezierTo(prevX, prevY, midX, (prevY + y) / 2f)
+                }
+            }
+            val lastX = (data.size - 1) * stepX
+            val lastY = height - (data.last().coerceIn(0f, maxDisplayMs) / maxDisplayMs * height)
+            path.lineTo(lastX, lastY)
+
+            drawPath(
+                path = path,
+                color = theme.accentSecondary.copy(alpha = 0.8f),
+                style = Stroke(
+                    width = 1.5f,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round
+                )
+            )
+
+            // Highlight dropped frames (>33.3ms = 2× vsync) as red dots
+            data.forEachIndexed { index, frameTimeMs ->
+                if (frameTimeMs > 33.3f) {
+                    val x = index * stepX
+                    val y = height - (frameTimeMs.coerceIn(0f, maxDisplayMs) / maxDisplayMs * height)
+                    drawCircle(
+                        color = theme.accentDanger.copy(alpha = 0.9f),
+                        radius = 2.5f,
+                        center = Offset(x, y)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** *
  * Android 12+ (S): Uses RenderEffect.createBlurEffect() for real gaussian blur,
  * simulating iOS-style frosted glass. The blur radius scales with opacity.
  *

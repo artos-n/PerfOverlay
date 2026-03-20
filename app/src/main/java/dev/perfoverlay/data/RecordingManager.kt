@@ -32,6 +32,9 @@ class RecordingManager(private val context: Context) {
     private var fpsSum = 0L
     private var cpuSum = 0f
     private var gpuSum = 0f
+    private var frameTimeSum = 0f
+    private var p95FrameTimeMax = 0f
+    private var totalDroppedFrames = 0
     private var sampleCount = 0
 
     /**
@@ -59,6 +62,9 @@ class RecordingManager(private val context: Context) {
         fpsSum = 0
         cpuSum = 0f
         gpuSum = 0f
+        frameTimeSum = 0f
+        p95FrameTimeMax = 0f
+        totalDroppedFrames = 0
         sampleCount = 0
 
         // Start collecting samples
@@ -84,6 +90,10 @@ class RecordingManager(private val context: Context) {
                         sessionId = sessionId,
                         timestamp = relativeTime,
                         fps = stats.fps,
+                        avgFrameTimeMs = stats.avgFrameTimeMs,
+                        p95FrameTimeMs = stats.p95FrameTimeMs,
+                        p99FrameTimeMs = stats.p99FrameTimeMs,
+                        droppedFrames = stats.droppedFrames,
                         cpuUsage = stats.cpuUsage,
                         cpuFrequency = stats.cpuFrequency,
                         gpuUsage = stats.gpuUsage,
@@ -101,6 +111,9 @@ class RecordingManager(private val context: Context) {
                     fpsSum += stats.fps
                     cpuSum += stats.cpuUsage
                     gpuSum += stats.gpuUsage
+                    frameTimeSum += stats.avgFrameTimeMs
+                    if (stats.p95FrameTimeMs > p95FrameTimeMax) p95FrameTimeMax = stats.p95FrameTimeMs
+                    totalDroppedFrames = stats.droppedFrames
                     sampleCount++
                 }
 
@@ -135,6 +148,9 @@ class RecordingManager(private val context: Context) {
                 endTime = System.currentTimeMillis(),
                 sampleCount = sampleCount,
                 avgFps = fpsSum.toFloat() / sampleCount,
+                avgFrameTimeMs = frameTimeSum / sampleCount,
+                p95FrameTimeMs = p95FrameTimeMax,
+                totalDroppedFrames = totalDroppedFrames,
                 avgCpu = cpuSum / sampleCount,
                 avgGpu = gpuSum / sampleCount
             )
@@ -145,6 +161,9 @@ class RecordingManager(private val context: Context) {
         fpsSum = 0
         cpuSum = 0f
         gpuSum = 0f
+        frameTimeSum = 0f
+        p95FrameTimeMax = 0f
+        totalDroppedFrames = 0
         sampleCount = 0
     }
 

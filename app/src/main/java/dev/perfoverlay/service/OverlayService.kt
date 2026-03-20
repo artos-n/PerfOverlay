@@ -106,7 +106,15 @@ class OverlayService : LifecycleService() {
         statsJob = lifecycleScope.launch {
             while (isActive) {
                 val baseStats = StatsCollector.collect(applicationContext)
-                stats.value = baseStats.copy(fps = fpsMonitor.getFps())
+                stats.value = baseStats.copy(
+                    fps = fpsMonitor.getFps(),
+                    avgFrameTimeMs = fpsMonitor.getAvgFrameTimeMs(),
+                    p95FrameTimeMs = fpsMonitor.getP95FrameTimeMs(),
+                    p99FrameTimeMs = fpsMonitor.getP99FrameTimeMs(),
+                    droppedFrames = fpsMonitor.getDroppedFrames(),
+                    totalFrames = fpsMonitor.getTotalFrames(),
+                    frameTimeStrip = fpsMonitor.getFrameTimeStrip()
+                )
                 delay(config.value.refreshIntervalMs)
             }
         }

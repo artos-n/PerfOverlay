@@ -12,11 +12,11 @@
 ## Novel Features (desktop → mobile firsts)
 
 ### Frame Time Graph
-- [ ] **Per-frame duration tracking** — capture actual frame time in ms via Choreographer (not averaged FPS)
-- [ ] **Frame time strip** — thin micro-graph below FPS badge showing per-frame spikes
-- [ ] **Dropped frame detection** — flag frames exceeding 2× vsync interval (e.g. >16.6ms @ 60Hz)
-- [ ] **P99/P95 frame time stats** — percentile frame latency in session summary (like CapFrameX)
-- [ ] **Frame time in recordings** — store per-frame data in Room for session analysis
+- [x] **Per-frame duration tracking** — capture actual frame time in ms via Choreographer (not averaged FPS)
+- [x] **Frame time strip** — thin micro-graph below FPS badge showing per-frame spikes
+- [x] **Dropped frame detection** — flag frames exceeding 2× vsync interval (e.g. >16.6ms @ 60Hz)
+- [x] **P99/P95 frame time stats** — percentile frame latency in session summary (like CapFrameX)
+- [x] **Frame time in recordings** — store per-frame data in Room for session analysis
 
 ### Thermal Throttling Detection
 - [ ] **Throttle event logging** — detect when CPU/GPU frequency drops while temperature is high

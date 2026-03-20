@@ -15,6 +15,7 @@ class ConfigRepository(private val context: Context) {
         private val POSITION = stringPreferencesKey("position")
         private val OPACITY = floatPreferencesKey("opacity")
         private val SHOW_FPS = booleanPreferencesKey("show_fps")
+        private val SHOW_FRAME_TIME = booleanPreferencesKey("show_frame_time")
         private val SHOW_CPU = booleanPreferencesKey("show_cpu")
         private val SHOW_GPU = booleanPreferencesKey("show_gpu")
         private val SHOW_TEMP = booleanPreferencesKey("show_temp")
@@ -33,6 +34,7 @@ class ConfigRepository(private val context: Context) {
                 ?: OverlayPosition.TOP_LEFT,
             opacity = prefs[OPACITY] ?: 0.85f,
             showFps = prefs[SHOW_FPS] ?: true,
+            showFrameTime = prefs[SHOW_FRAME_TIME] ?: true,
             showCpu = prefs[SHOW_CPU] ?: true,
             showGpu = prefs[SHOW_GPU] ?: true,
             showTemp = prefs[SHOW_TEMP] ?: true,
@@ -51,6 +53,7 @@ class ConfigRepository(private val context: Context) {
             prefs[POSITION] = config.position.name
             prefs[OPACITY] = config.opacity
             prefs[SHOW_FPS] = config.showFps
+            prefs[SHOW_FRAME_TIME] = config.showFrameTime
             prefs[SHOW_CPU] = config.showCpu
             prefs[SHOW_GPU] = config.showGpu
             prefs[SHOW_TEMP] = config.showTemp

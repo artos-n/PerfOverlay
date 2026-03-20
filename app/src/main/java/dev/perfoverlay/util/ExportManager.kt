@@ -35,11 +35,11 @@ object ExportManager {
 
         val csv = buildString {
             // Header
-            appendLine("timestamp_ms,fps,cpu_usage_pct,cpu_freq_mhz,gpu_usage_pct,cpu_temp_c,gpu_temp_c,battery_temp_c,ram_used_mb,ram_total_mb,download_bps,upload_bps")
+            appendLine("timestamp_ms,fps,avg_frame_time_ms,p95_frame_time_ms,p99_frame_time_ms,dropped_frames,cpu_usage_pct,cpu_freq_mhz,gpu_usage_pct,cpu_temp_c,gpu_temp_c,battery_temp_c,ram_used_mb,ram_total_mb,download_bps,upload_bps")
 
             // Data rows
             samples.forEach { s ->
-                appendLine("${s.timestamp},${s.fps},${s.cpuUsage},${s.cpuFrequency},${s.gpuUsage},${s.cpuTemp},${s.gpuTemp},${s.batteryTemp},${s.ramUsed},${s.ramTotal},${s.downloadSpeed},${s.uploadSpeed}")
+                appendLine("${s.timestamp},${s.fps},${s.avgFrameTimeMs},${s.p95FrameTimeMs},${s.p99FrameTimeMs},${s.droppedFrames},${s.cpuUsage},${s.cpuFrequency},${s.gpuUsage},${s.cpuTemp},${s.gpuTemp},${s.batteryTemp},${s.ramUsed},${s.ramTotal},${s.downloadSpeed},${s.uploadSpeed}")
             }
         }
 
@@ -70,6 +70,10 @@ object ExportManager {
                 append("    {")
                 append("\"t\":${s.timestamp},")
                 append("\"fps\":${s.fps},")
+                append("\"ftMs\":${s.avgFrameTimeMs},")
+                append("\"p95Ms\":${s.p95FrameTimeMs},")
+                append("\"p99Ms\":${s.p99FrameTimeMs},")
+                append("\"drops\":${s.droppedFrames},")
                 append("\"cpu\":${s.cpuUsage},")
                 append("\"cpuMhz\":${s.cpuFrequency},")
                 append("\"gpu\":${s.gpuUsage},")

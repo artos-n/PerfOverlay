@@ -32,6 +32,15 @@ data class RecordingSession(
     /** Average FPS during the session */
     val avgFps: Float = 0f,
 
+    /** Average frame time in ms during the session */
+    val avgFrameTimeMs: Float = 0f,
+
+    /** P95 frame time in ms during the session */
+    val p95FrameTimeMs: Float = 0f,
+
+    /** Total dropped frames during the session */
+    val totalDroppedFrames: Int = 0,
+
     /** Average CPU usage during the session */
     val avgCpu: Float = 0f,
 
@@ -63,6 +72,10 @@ data class StatSample(
     val timestamp: Long,
 
     val fps: Int = 0,
+    val avgFrameTimeMs: Float = 0f,
+    val p95FrameTimeMs: Float = 0f,
+    val p99FrameTimeMs: Float = 0f,
+    val droppedFrames: Int = 0,
     val cpuUsage: Float = 0f,
     val cpuFrequency: Long = 0L,
     val gpuUsage: Float = 0f,
@@ -86,8 +99,8 @@ interface RecordingDao {
     @Update
     suspend fun updateSession(session: RecordingSession)
 
-    @Query("UPDATE recording_sessions SET endTime = :endTime, sampleCount = :sampleCount, avgFps = :avgFps, avgCpu = :avgCpu, avgGpu = :avgGpu WHERE id = :sessionId")
-    suspend fun finishSession(sessionId: Long, endTime: Long, sampleCount: Int, avgFps: Float, avgCpu: Float, avgGpu: Float)
+    @Query("UPDATE recording_sessions SET endTime = :endTime, sampleCount = :sampleCount, avgFps = :avgFps, avgFrameTimeMs = :avgFrameTimeMs, p95FrameTimeMs = :p95FrameTimeMs, totalDroppedFrames = :totalDroppedFrames, avgCpu = :avgCpu, avgGpu = :avgGpu WHERE id = :sessionId")
+    suspend fun finishSession(sessionId: Long, endTime: Long, sampleCount: Int, avgFps: Float, avgFrameTimeMs: Float, p95FrameTimeMs: Float, totalDroppedFrames: Int, avgCpu: Float, avgGpu: Float)
 
     @Query("SELECT * FROM recording_sessions ORDER BY startTime DESC")
     fun getAllSessions(): Flow<List<RecordingSession>>

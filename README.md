@@ -12,6 +12,7 @@ Real-time performance overlay for Android. FPS, CPU, GPU, temperatures, RAM, and
 | Stat | Details |
 |------|---------|
 | FPS | Real-time frame rate via Choreographer, color-coded badge (🟢🟡🔴) |
+| Frame Time | Per-frame duration strip, dropped frame detection, P95/P99 stats |
 | CPU | Usage % + frequency (MHz) with animated bar, delta-based from `/proc/stat` |
 | GPU | Usage % — Adreno & Mali support via sysfs |
 | Temperature | CPU, GPU, battery temps (device-dependent, reads `/sys/class/thermal/`) |
@@ -95,6 +96,13 @@ Requires Android Studio Hedgehog+ and JDK 17.
 - [x] Compact/minimal mode
 - [x] Export performance logs (CSV & JSON)
 - [x] Auto-start on boot
+- [x] Frame time graph with dropped frame detection
+- [ ] Thermal throttling detection
+- [ ] Anomaly timeline
+- [ ] Session diff / comparison
+- [ ] CPU governor tracking
+- [ ] Quick Settings tile
+- [ ] Stress test mode
 - [ ] Widget support
 
 ## Inspired By

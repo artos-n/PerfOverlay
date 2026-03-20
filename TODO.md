@@ -57,10 +57,10 @@
 - [x] **Test result summary** — "Sustains 85% CPU at 72°C before throttling to 60%"
 
 ## Medium Priority
-- [ ] **Custom themes** — color scheme picker (dark glass, light glass, neon, minimal)
-- [ ] **Compact mode** — toggle between full and minimal (FPS-only) overlay
-- [ ] **Settings export/import** — backup and restore config
-- [ ] **Export recordings** — CSV/JSON export of session data
+- [x] ~~Custom themes~~ — color scheme picker (dark glass, light glass, neon, minimal)
+- [x] ~~Compact mode~~ — toggle between full and minimal (FPS-only) overlay
+- [x] ~~Settings export/import~~ — backup and restore config
+- [x] ~~Export recordings~~ — CSV/JSON export of session data
 
 ## Low Priority
 - [ ] **Widget** — home screen widget showing current FPS/CPU

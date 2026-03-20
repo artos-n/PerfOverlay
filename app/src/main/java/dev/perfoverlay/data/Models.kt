@@ -1,25 +1,21 @@
 package dev.perfoverlay.data
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class PerformanceStats(
     val fps: Int = 0,
-    val cpuUsage: Float = 0f,        // percentage 0-100
-    val cpuFrequency: Long = 0L,     // MHz
-    val gpuUsage: Float = 0f,        // percentage 0-100
-    val cpuTemp: Float = 0f,         // celsius
-    val gpuTemp: Float = 0f,         // celsius
-    val batteryTemp: Float = 0f,     // celsius
-    val deviceTemp: Float = 0f,      // celsius (skin/case)
-    val ramUsed: Long = 0L,          // MB
-    val ramTotal: Long = 0L,         // MB
-    val downloadSpeed: Long = 0L,    // bytes/s
-    val uploadSpeed: Long = 0L,      // bytes/s
+    val cpuUsage: Float = 0f,
+    val cpuFrequency: Long = 0L,
+    val gpuUsage: Float = 0f,
+    val cpuTemp: Float = 0f,
+    val gpuTemp: Float = 0f,
+    val batteryTemp: Float = 0f,
+    val deviceTemp: Float = 0f,
+    val ramUsed: Long = 0L,
+    val ramTotal: Long = 0L,
+    val downloadSpeed: Long = 0L,
+    val uploadSpeed: Long = 0L,
     val timestamp: Long = System.currentTimeMillis()
 )
 
-@Serializable
 data class OverlayConfig(
     val position: OverlayPosition = OverlayPosition.TOP_LEFT,
     val opacity: Float = 0.85f,

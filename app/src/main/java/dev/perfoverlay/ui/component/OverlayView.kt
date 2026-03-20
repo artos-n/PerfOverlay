@@ -1,9 +1,6 @@
 package dev.perfoverlay.ui.component
 
-import android.graphics.RenderEffect
-import android.graphics.Shader
 import android.os.Build
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,10 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -43,16 +40,14 @@ fun OverlayView(
                 .padding(10.dp * currentConfig.scale),
             verticalArrangement = Arrangement.spacedBy(6.dp * currentConfig.scale)
         ) {
-            // Header
             OverlayHeader(currentStats.fps, currentConfig.showFps, currentConfig.scale)
 
-            // Stats rows
             if (currentConfig.showCpu) {
                 StatRow(
                     icon = Icons.Rounded.Memory,
                     label = "CPU",
                     value = "${currentStats.cpuUsage.toInt()}%",
-                    subValue = "${currentStats.cpuFrequency} MHz",
+                    subValue = if (currentStats.cpuFrequency > 0) "${currentStats.cpuFrequency} MHz" else null,
                     color = AccentBlue,
                     usage = currentStats.cpuUsage / 100f,
                     scale = currentConfig.scale
@@ -119,8 +114,11 @@ private fun FpsBadge(fps: Int, scale: Float) {
     val color = when {
         fps >= 55 -> AccentGreen
         fps >= 30 -> AccentYellow
-        else -> AccentRed
+        fps > 0 -> AccentRed
+        else -> Color.White.copy(alpha = 0.3f)
     }
+
+    val label = if (fps > 0) "$fps" else "—"
 
     Box(
         modifier = Modifier
@@ -129,7 +127,7 @@ private fun FpsBadge(fps: Int, scale: Float) {
             .padding(horizontal = 8.dp * scale, vertical = 3.dp * scale)
     ) {
         Text(
-            text = "$fps",
+            text = label,
             fontSize = (14.sp * scale),
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
@@ -188,7 +186,6 @@ private fun StatRow(
                 }
             }
 
-            // Usage bar
             Spacer(modifier = Modifier.height(3.dp * scale))
             UsageBar(usage, color, scale)
         }
@@ -290,6 +287,11 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float) {
     }
 }
 
+/**
+ * Glassmorphism card with layered frosted-glass effect.
+ * On Android 12+ (S), uses Compose blur. On older versions,
+ * uses gradient approximation.
+ */
 @Composable
 fun GlassmorphismCard(
     alpha: Float = 0.85f,
@@ -306,14 +308,21 @@ fun GlassmorphismCard(
                     )
                 )
             )
+            // Outer border glow
             .then(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    Modifier
+                    Modifier.blur(0.5.dp) // subtle blur on the edges
                 } else {
                     Modifier
                 }
-            )
-            .padding(1.dp),
+            ),
         content = content
+    )
+
+    // Border overlay
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.Transparent)
     )
 }

@@ -3,8 +3,8 @@ package dev.perfoverlay.util
 import android.app.ActivityManager
 import android.content.Context
 import android.net.TrafficStats
-import android.os.Build
 import java.io.BufferedReader
+import java.io.File
 import java.io.FileReader
 import kotlin.math.roundToInt
 
@@ -13,6 +13,8 @@ object StatsCollector {
     private var lastRxBytes = 0L
     private var lastTxBytes = 0L
     private var lastTimestamp = 0L
+    private var prevIdle = 0L
+    private var prevTotal = 0L
 
     fun collect(context: Context): dev.perfoverlay.data.PerformanceStats {
         val now = System.currentTimeMillis()
@@ -34,9 +36,12 @@ object StatsCollector {
         val ramTotal = memInfo.totalMem / (1024 * 1024)
         val ramUsed = (memInfo.totalMem - memInfo.availMem) / (1024 * 1024)
 
-        // CPU
-        val cpuUsage = getCpuUsage()
+        // CPU (delta-based for accuracy)
+        val cpuUsage = getCpuUsageDelta()
         val cpuFreq = getCpuFrequency()
+
+        // GPU
+        val gpuUsage = getGpuUsage()
 
         // Temperatures
         val temps = getTemperatures()
@@ -44,6 +49,7 @@ object StatsCollector {
         return dev.perfoverlay.data.PerformanceStats(
             cpuUsage = cpuUsage,
             cpuFrequency = cpuFreq,
+            gpuUsage = gpuUsage,
             cpuTemp = temps.getOrElse(0) { 0f },
             gpuTemp = temps.getOrElse(1) { 0f },
             batteryTemp = temps.getOrElse(2) { 0f },
@@ -56,16 +62,39 @@ object StatsCollector {
         )
     }
 
-    private fun getCpuUsage(): Float {
+    /**
+     * Delta-based CPU usage from /proc/stat.
+     * Tracks previous idle/total and computes the difference.
+     */
+    private fun getCpuUsageDelta(): Float {
         return try {
             val reader = BufferedReader(FileReader("/proc/stat"))
             val line = reader.readLine()
             reader.close()
             val parts = line.split("\\s+".toRegex())
+            val user = parts[1].toLong()
+            val nice = parts[2].toLong()
+            val system = parts[3].toLong()
             val idle = parts[4].toLong()
-            val total = parts.drop(1).take(7).sumOf { it.toLong() }
-            // Simple instant reading (proper impl would track delta)
-            ((total - idle).toFloat() / total * 100).coerceIn(0f, 100f)
+            val iowait = parts[5].toLongOrNull() ?: 0L
+            val irq = parts[6].toLongOrNull() ?: 0L
+            val softirq = parts[7].toLongOrNull() ?: 0L
+
+            val total = user + nice + system + idle + iowait + irq + softirq
+            val idleTotal = idle + iowait
+
+            val usage = if (prevTotal > 0) {
+                val totalDelta = (total - prevTotal).toFloat()
+                val idleDelta = (idleTotal - prevIdle).toFloat()
+                if (totalDelta > 0) ((totalDelta - idleDelta) / totalDelta * 100f).coerceIn(0f, 100f)
+                else 0f
+            } else {
+                0f
+            }
+
+            prevTotal = total
+            prevIdle = idleTotal
+            usage
         } catch (e: Exception) {
             0f
         }
@@ -82,9 +111,67 @@ object StatsCollector {
         }
     }
 
+    /**
+     * Best-effort GPU usage reading.
+     * Adreno (Qualcomm): /sys/class/kgsl/kgsl-3d0/gpubusy or /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage
+     * Mali (Samsung/MediaTek): /sys/class/devfreq/*/load (varies by device)
+     */
+    private fun getGpuUsage(): Float {
+        // Adreno — gpu_busy_percentage (0-100)
+        try {
+            val file = File("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage")
+            if (file.exists()) {
+                val reader = BufferedReader(FileReader(file))
+                val raw = reader.readLine().trim()
+                reader.close()
+                return raw.replace("%", "").toFloatOrNull()?.coerceIn(0f, 100f) ?: 0f
+            }
+        } catch (_: Exception) {}
+
+        // Adreno — gpubusy (two numbers: busy / total)
+        try {
+            val file = File("/sys/class/kgsl/kgsl-3d0/gpubusy")
+            if (file.exists()) {
+                val reader = BufferedReader(FileReader(file))
+                val parts = reader.readLine().trim().split("\\s+".toRegex())
+                reader.close()
+                if (parts.size >= 2) {
+                    val busy = parts[0].toLongOrNull() ?: 0L
+                    val total = parts[1].toLongOrNull() ?: 1L
+                    if (total > 0) return (busy.toFloat() / total * 100f).coerceIn(0f, 100f)
+                }
+            }
+        } catch (_: Exception) {}
+
+        // Mali — try devfreq load files
+        try {
+            val devfreqDir = File("/sys/class/devfreq/")
+            if (devfreqDir.exists()) {
+                devfreqDir.listFiles()?.forEach { dir ->
+                    val name = dir.name.lowercase()
+                    if (name.contains("gpu") || name.contains("mali") || name.contains("kgsl")) {
+                        val loadFile = File(dir, "load")
+                        if (loadFile.exists()) {
+                            val reader = BufferedReader(FileReader(loadFile))
+                            val raw = reader.readLine().trim()
+                            reader.close()
+                            // Format is typically "load@freq" e.g. "85@600000000"
+                            val load = raw.split("@")[0].toIntOrNull()
+                            if (load != null) return load.toFloat().coerceIn(0f, 100f)
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+
+        return 0f
+    }
+
+    /**
+     * Reads temperatures from /sys/class/thermal/thermal_zone*/
+    */
     private fun getTemperatures(): List<Float> {
         val temps = mutableListOf<Float>()
-        // Try common thermal zone paths
         for (i in 0..20) {
             try {
                 val path = "/sys/class/thermal/thermal_zone$i/type"

@@ -12,7 +12,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import dev.perfoverlay.PerfOverlayApp
 import dev.perfoverlay.R
 import dev.perfoverlay.data.ConfigRepository
@@ -21,6 +20,7 @@ import dev.perfoverlay.data.OverlayPosition
 import dev.perfoverlay.data.PerformanceStats
 import dev.perfoverlay.ui.component.OverlayView
 import dev.perfoverlay.ui.theme.PerfOverlayTheme
+import dev.perfoverlay.util.FpsMonitor
 import dev.perfoverlay.util.StatsCollector
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +54,7 @@ class OverlayService : LifecycleService() {
     private lateinit var windowManager: WindowManager
     private var overlayView: ComposeView? = null
     private var statsJob: Job? = null
+    private val fpsMonitor = FpsMonitor()
     private val configRepo by lazy { ConfigRepository(PerfOverlayApp.instance) }
 
     override fun onBind(intent: android.content.Intent): IBinder? {
@@ -67,6 +68,9 @@ class OverlayService : LifecycleService() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+        // Start FPS monitoring
+        fpsMonitor.start()
 
         // Collect config changes
         lifecycleScope.launch {
@@ -82,6 +86,7 @@ class OverlayService : LifecycleService() {
     override fun onDestroy() {
         isRunning = false
         statsJob?.cancel()
+        fpsMonitor.stop()
         removeOverlay()
         super.onDestroy()
     }
@@ -89,7 +94,8 @@ class OverlayService : LifecycleService() {
     private fun startStatsCollection() {
         statsJob = lifecycleScope.launch {
             while (isActive) {
-                stats.value = StatsCollector.collect(applicationContext)
+                val baseStats = StatsCollector.collect(applicationContext)
+                stats.value = baseStats.copy(fps = fpsMonitor.getFps())
                 delay(config.value.refreshIntervalMs)
             }
         }

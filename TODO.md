@@ -5,19 +5,18 @@
 - [x] ~~Proper blur effect~~ — real frosted glass on Android 12+ using `RenderEffect.createBlurEffect()`
 - [x] ~~Overlay drag~~ — long-press to drag and reposition overlay anywhere on screen
 - [x] ~~Shizuku integration~~ — auto-grant overlay permission via Shizuku UserService + appops
-- [ ] **Per-app FPS** — detect which app is in foreground and track its frame rate separately
+- [x] ~~Per-app recording~~ — Room DB storage, per-app session tracking, foreground app detection
+- [x] ~~Performance graphs~~ — Canvas-based line charts with smooth curves, gradient fill, multi-metric overlay
 - [ ] **Full Shizuku overlay** — create overlay windows directly via Shizuku (bypass SYSTEM_ALERT_WINDOW entirely)
 
 ## Medium Priority
-- [ ] **Per-app recording** — record stats per application, store in Room DB
-- [ ] **Performance graphs** — show recorded data as line charts (CPU/FPS/RAM over time)
 - [ ] **Custom themes** — color scheme picker (dark glass, light glass, neon, minimal)
 - [ ] **Compact mode** — toggle between full and minimal (FPS-only) overlay
 - [ ] **Settings export/import** — backup and restore config
+- [ ] **Export recordings** — CSV/JSON export of session data
 
 ## Low Priority
 - [ ] **Widget** — home screen widget showing current FPS/CPU
-- [ ] **Export logs** — CSV/JSON export of recorded performance data
 - [ ] **Battery stats** — battery level, charge rate, estimated time remaining
 - [ ] **Per-core CPU** — show individual core usage (not just aggregate)
 - [ ] **GPU frequency** — read GPU clock speed in addition to usage %

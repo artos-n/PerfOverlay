@@ -2,13 +2,11 @@ package dev.perfoverlay.ui
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import dev.perfoverlay.PerfOverlayApp
 import dev.perfoverlay.data.*
 import dev.perfoverlay.service.OverlayService
 import dev.perfoverlay.service.ShizukuHelper
@@ -41,15 +40,15 @@ class MainActivity : ComponentActivity() {
 
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) {
-        // Permission result handled in compose
-    }
+    ) {}
 
     private lateinit var configRepo: ConfigRepository
+    private lateinit var recordingManager: RecordingManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         configRepo = ConfigRepository(applicationContext)
+        recordingManager = RecordingManager(applicationContext)
         ShizukuHelper.init(this)
 
         setContent {
@@ -58,7 +57,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF000000)
                 ) {
-                    MainScreen()
+                    MainApp()
                 }
             }
         }
@@ -67,19 +66,84 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         ShizukuHelper.destroy()
+        recordingManager.destroy()
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    enum class Tab(val icon: ImageVector, val label: String) {
+        OVERLAY(Icons.Rounded.Speed, "Overlay"),
+        RECORD(Icons.Rounded.Timeline, "Record")
+    }
+
     @Composable
-    fun MainScreen() {
+    fun MainApp() {
+        var selectedTab by remember { mutableStateOf(Tab.OVERLAY) }
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Content
+            Box(modifier = Modifier.weight(1f)) {
+                when (selectedTab) {
+                    Tab.OVERLAY -> OverlaySettingsScreen()
+                    Tab.RECORD -> RecordingScreen(
+                        recordingManager = recordingManager,
+                        statsProvider = { OverlayService.stats.value },
+                        configRefreshInterval = configRepo.config
+                            .collectAsState(initial = OverlayConfig()).value
+                            .refreshIntervalMs
+                    )
+                }
+            }
+
+            // Bottom tab bar
+            BottomTabBar(selectedTab) { selectedTab = it }
+        }
+    }
+
+    @Composable
+    private fun BottomTabBar(selected: Tab, onSelect: (Tab) -> Unit) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF0A0A0A))
+                .padding(vertical = 8.dp, horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Tab.entries.forEach { tab ->
+                val isSelected = tab == selected
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onSelect(tab) }
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        tab.icon,
+                        contentDescription = tab.label,
+                        modifier = Modifier.size(22.dp),
+                        tint = if (isSelected) AccentBlue else Color.White.copy(alpha = 0.35f)
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        tab.label,
+                        fontSize = 10.sp,
+                        color = if (isSelected) AccentBlue else Color.White.copy(alpha = 0.35f),
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+    }
+
+    // ─── Overlay Settings Screen ───────────────────────────────
+
+    @Composable
+    fun OverlaySettingsScreen() {
         var hasOverlayPermission by remember {
             mutableStateOf(Settings.canDrawOverlays(this@MainActivity))
         }
         var isServiceRunning by remember { mutableStateOf(OverlayService.isRunning) }
         val config by configRepo.config.collectAsState(initial = OverlayConfig())
         val shizukuState by ShizukuHelper.state.collectAsState()
-
-        // Live stats from service
         val liveStats by OverlayService.stats.collectAsState()
 
         Column(
@@ -89,10 +153,8 @@ class MainActivity : ComponentActivity() {
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
             HeaderSection()
 
-            // Permission card
             if (!hasOverlayPermission) {
                 PermissionCard(
                     shizukuState = shizukuState,
@@ -114,37 +176,24 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            // Master toggle
             MasterToggle(
                 isRunning = isServiceRunning,
                 hasPermission = hasOverlayPermission
             ) { running ->
-                if (running) {
-                    OverlayService.start(this@MainActivity)
-                } else {
-                    OverlayService.stop(this@MainActivity)
-                }
+                if (running) OverlayService.start(this@MainActivity)
+                else OverlayService.stop(this@MainActivity)
                 isServiceRunning = running
             }
 
-            // Live preview
             if (isServiceRunning) {
                 LivePreviewCard(liveStats, config)
             }
 
-            // Stats toggles
             StatsTogglesCard(config)
-
-            // Appearance
             AppearanceCard(config)
-
-            // Position
             PositionCard(config)
-
-            // Refresh rate
             RefreshRateCard(config)
 
-            // Shizuku status (always visible if installed)
             if (shizukuState != ShizukuHelper.State.NOT_INSTALLED) {
                 ShizukuStatusCard(shizukuState)
             }
@@ -152,6 +201,8 @@ class MainActivity : ComponentActivity() {
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
+
+    // ─── Composable Sections ───────────────────────────────────
 
     @Composable
     private fun HeaderSection() {
@@ -163,32 +214,14 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(AccentBlue, AccentGreen)
-                        )
-                    ),
+                    .background(Brush.linearGradient(colors = listOf(AccentBlue, AccentGreen))),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Speed,
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    tint = Color.White
-                )
+                Icon(Icons.Rounded.Speed, null, modifier = Modifier.size(28.dp), tint = Color.White)
             }
             Column {
-                Text(
-                    text = "PerfOverlay",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    text = "Real-time performance stats",
-                    fontSize = 13.sp,
-                    color = Color.White.copy(alpha = 0.5f)
-                )
+                Text("PerfOverlay", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Real-time performance stats", fontSize = 13.sp, color = Color.White.copy(alpha = 0.5f))
             }
         }
     }
@@ -201,60 +234,24 @@ class MainActivity : ComponentActivity() {
     ) {
         GlassmorphismCard(alpha = 0.9f) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Rounded.Warning,
-                        contentDescription = null,
-                        tint = AccentYellow
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Warning, null, tint = AccentYellow)
                     Column {
-                        Text(
-                            "Overlay permission required",
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            "Needed to show stats on top of other apps",
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
+                        Text("Overlay permission required", color = Color.White, fontWeight = FontWeight.Medium)
+                        Text("Needed to show stats on top of other apps", fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
                     }
                 }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Standard Settings grant
-                    Button(
-                        onClick = onGrantDirect,
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            Icons.Rounded.Settings,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = onGrantDirect, colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Rounded.Settings, null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("Settings")
                     }
-
-                    // Shizuku grant (only show if Shizuku is running)
                     if (shizukuState == ShizukuHelper.State.RUNNING) {
-                        Button(
-                            onClick = onGrantShizuku,
-                            colors = ButtonDefaults.buttonColors(containerColor = GlassPurple),
-                            modifier = Modifier.weight(1f)
-                        ) {
+                        Button(onClick = onGrantShizuku, colors = ButtonDefaults.buttonColors(containerColor = GlassPurple), modifier = Modifier.weight(1f)) {
                             Text("⚡ Shizuku")
                         }
                     }
@@ -264,26 +261,15 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun MasterToggle(
-        isRunning: Boolean,
-        hasPermission: Boolean,
-        onToggle: (Boolean) -> Unit
-    ) {
+    private fun MasterToggle(isRunning: Boolean, hasPermission: Boolean, onToggle: (Boolean) -> Unit) {
         GlassmorphismCard(alpha = 0.9f) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(
-                        "Performance Overlay",
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
-                    )
+                    Text("Performance Overlay", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                     Text(
                         if (isRunning) "Active — monitoring stats" else "Inactive",
                         fontSize = 12.sp,
@@ -291,13 +277,8 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Switch(
-                    checked = isRunning,
-                    onCheckedChange = { onToggle(it) },
-                    enabled = hasPermission,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = AccentGreen,
-                        checkedTrackColor = AccentGreen.copy(alpha = 0.3f)
-                    )
+                    checked = isRunning, onCheckedChange = { onToggle(it) }, enabled = hasPermission,
+                    colors = SwitchDefaults.colors(checkedThumbColor = AccentGreen, checkedTrackColor = AccentGreen.copy(alpha = 0.3f))
                 )
             }
         }
@@ -305,32 +286,13 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun LivePreviewCard(stats: PerformanceStats, config: OverlayConfig) {
-        Text(
-            "LIVE STATS",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 2.sp,
-            color = Color.White.copy(alpha = 0.4f)
-        )
+        Text("LIVE STATS", fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, color = Color.White.copy(alpha = 0.4f))
         GlassmorphismCard(alpha = 0.85f) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (config.showFps) {
-                    LiveStatRow("FPS", "${stats.fps}", AccentGreen)
-                }
-                if (config.showCpu) {
-                    LiveStatRow("CPU", "${stats.cpuUsage.toInt()}% @ ${stats.cpuFrequency} MHz", AccentBlue)
-                }
-                if (config.showGpu) {
-                    LiveStatRow("GPU", "${stats.gpuUsage.toInt()}%", AccentGreen)
-                }
-                if (config.showRam) {
-                    LiveStatRow("RAM", "${stats.ramUsed} / ${stats.ramTotal} MB", GlassPurple)
-                }
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (config.showFps) LiveStatRow("FPS", "${stats.fps}", AccentGreen)
+                if (config.showCpu) LiveStatRow("CPU", "${stats.cpuUsage.toInt()}% @ ${stats.cpuFrequency} MHz", AccentBlue)
+                if (config.showGpu) LiveStatRow("GPU", "${stats.gpuUsage.toInt()}%", AccentGreen)
+                if (config.showRam) LiveStatRow("RAM", "${stats.ramUsed} / ${stats.ramTotal} MB", GlassPurple)
                 if (config.showTemp) {
                     val temps = listOfNotNull(
                         if (stats.cpuTemp > 0) "CPU ${stats.cpuTemp.toInt()}°" else null,
@@ -340,11 +302,7 @@ class MainActivity : ComponentActivity() {
                     if (temps.isNotEmpty()) LiveStatRow("TEMP", temps, AccentRed)
                 }
                 if (config.showNetwork) {
-                    LiveStatRow(
-                        "NET",
-                        "↓ ${dev.perfoverlay.util.StatsCollector.formatSpeed(stats.downloadSpeed)}  ↑ ${dev.perfoverlay.util.StatsCollector.formatSpeed(stats.uploadSpeed)}",
-                        GlassBlue
-                    )
+                    LiveStatRow("NET", "↓ ${StatsCollector.formatSpeed(stats.downloadSpeed)}  ↑ ${StatsCollector.formatSpeed(stats.uploadSpeed)}", GlassBlue)
                 }
             }
         }
@@ -352,10 +310,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun LiveStatRow(label: String, value: String, color: Color) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, fontSize = 12.sp, color = color, fontWeight = FontWeight.Medium)
             Text(value, fontSize = 12.sp, color = Color.White, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
         }
@@ -365,28 +320,13 @@ class MainActivity : ComponentActivity() {
     private fun StatsTogglesCard(config: OverlayConfig) {
         SectionLabel("STATS")
         GlassmorphismCard(alpha = 0.8f) {
-            Column(
-                modifier = Modifier.padding(4.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                StatToggle("FPS", Icons.Rounded.PlayArrow, config.showFps) {
-                    updateConfig(config.copy(showFps = it))
-                }
-                StatToggle("CPU", Icons.Rounded.Memory, config.showCpu) {
-                    updateConfig(config.copy(showCpu = it))
-                }
-                StatToggle("GPU", Icons.Rounded.Games, config.showGpu) {
-                    updateConfig(config.copy(showGpu = it))
-                }
-                StatToggle("RAM", Icons.Rounded.Storage, config.showRam) {
-                    updateConfig(config.copy(showRam = it))
-                }
-                StatToggle("Temperature", Icons.Rounded.Thermostat, config.showTemp) {
-                    updateConfig(config.copy(showTemp = it))
-                }
-                StatToggle("Network", Icons.Rounded.Wifi, config.showNetwork) {
-                    updateConfig(config.copy(showNetwork = it))
-                }
+            Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                StatToggle("FPS", Icons.Rounded.PlayArrow, config.showFps) { updateConfig(config.copy(showFps = it)) }
+                StatToggle("CPU", Icons.Rounded.Memory, config.showCpu) { updateConfig(config.copy(showCpu = it)) }
+                StatToggle("GPU", Icons.Rounded.Games, config.showGpu) { updateConfig(config.copy(showGpu = it)) }
+                StatToggle("RAM", Icons.Rounded.Storage, config.showRam) { updateConfig(config.copy(showRam = it)) }
+                StatToggle("Temperature", Icons.Rounded.Thermostat, config.showTemp) { updateConfig(config.copy(showTemp = it)) }
+                StatToggle("Network", Icons.Rounded.Wifi, config.showNetwork) { updateConfig(config.copy(showNetwork = it)) }
             }
         }
     }
@@ -394,29 +334,14 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun StatToggle(label: String, icon: ImageVector, checked: Boolean, onChange: (Boolean) -> Unit) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .clickable { onChange(!checked) }
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable { onChange(!checked) }.padding(horizontal = 12.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
                 Text(label, color = Color.White, fontSize = 14.sp)
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = onChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = AccentBlue,
-                    checkedTrackColor = AccentBlue.copy(alpha = 0.3f)
-                )
-            )
+            Switch(checked = checked, onCheckedChange = onChange, colors = SwitchDefaults.colors(checkedThumbColor = AccentBlue, checkedTrackColor = AccentBlue.copy(alpha = 0.3f)))
         }
     }
 
@@ -424,45 +349,17 @@ class MainActivity : ComponentActivity() {
     private fun AppearanceCard(config: OverlayConfig) {
         SectionLabel("APPEARANCE")
         GlassmorphismCard(alpha = 0.8f) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Opacity
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Opacity", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
                     Text("${(config.opacity * 100).toInt()}%", color = Color.White, fontSize = 13.sp)
                 }
-                Slider(
-                    value = config.opacity,
-                    onValueChange = { updateConfig(config.copy(opacity = it)) },
-                    valueRange = 0.3f..1f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = AccentBlue,
-                        activeTrackColor = AccentBlue
-                    )
-                )
-
-                // Scale
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                Slider(value = config.opacity, onValueChange = { updateConfig(config.copy(opacity = it)) }, valueRange = 0.3f..1f, colors = SliderDefaults.colors(thumbColor = AccentBlue, activeTrackColor = AccentBlue))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Scale", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
                     Text("${(config.scale * 100).toInt()}%", color = Color.White, fontSize = 13.sp)
                 }
-                Slider(
-                    value = config.scale,
-                    onValueChange = { updateConfig(config.copy(scale = it)) },
-                    valueRange = 0.5f..2f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = AccentGreen,
-                        activeTrackColor = AccentGreen
-                    )
-                )
+                Slider(value = config.scale, onValueChange = { updateConfig(config.copy(scale = it)) }, valueRange = 0.5f..2f, colors = SliderDefaults.colors(thumbColor = AccentGreen, activeTrackColor = AccentGreen))
             }
         }
     }
@@ -471,33 +368,19 @@ class MainActivity : ComponentActivity() {
     private fun PositionCard(config: OverlayConfig) {
         SectionLabel("POSITION")
         GlassmorphismCard(alpha = 0.8f) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                val positions = OverlayPosition.entries
-                positions.chunked(2).forEach { row ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                OverlayPosition.entries.chunked(2).forEach { row ->
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         row.forEach { pos ->
                             val isSelected = config.position == pos
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(
-                                        if (isSelected) AccentBlue.copy(alpha = 0.3f)
-                                        else Color.White.copy(alpha = 0.05f)
-                                    )
-                                    .clickable { updateConfig(config.copy(position = pos)) }
-                                    .padding(12.dp),
+                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) AccentBlue.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.05f))
+                                    .clickable { updateConfig(config.copy(position = pos)) }.padding(12.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    pos.name.replace("_", " ").lowercase()
-                                        .replaceFirstChar { it.uppercase() },
+                                    pos.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                                     fontSize = 12.sp,
                                     color = if (isSelected) AccentBlue else Color.White.copy(alpha = 0.6f),
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -515,35 +398,18 @@ class MainActivity : ComponentActivity() {
     private fun RefreshRateCard(config: OverlayConfig) {
         SectionLabel("REFRESH RATE")
         GlassmorphismCard(alpha = 0.8f) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val rates = listOf(500L to "0.5s", 1000L to "1s", 2000L to "2s", 3000L to "3s")
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     rates.forEach { (ms, label) ->
                         val isSelected = config.refreshIntervalMs == ms
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (isSelected) AccentBlue.copy(alpha = 0.3f)
-                                    else Color.White.copy(alpha = 0.05f)
-                                )
-                                .clickable { updateConfig(config.copy(refreshIntervalMs = ms)) }
-                                .padding(vertical = 10.dp),
+                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) AccentBlue.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.05f))
+                                .clickable { updateConfig(config.copy(refreshIntervalMs = ms)) }.padding(vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                label,
-                                fontSize = 13.sp,
-                                color = if (isSelected) AccentBlue else Color.White.copy(alpha = 0.6f),
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
+                            Text(label, fontSize = 13.sp, color = if (isSelected) AccentBlue else Color.White.copy(alpha = 0.6f), fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
                         }
                     }
                 }
@@ -556,76 +422,41 @@ class MainActivity : ComponentActivity() {
         SectionLabel("SHIZUKU")
         GlassmorphismCard(alpha = 0.8f) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Rounded.Bolt,
-                        contentDescription = null,
-                        tint = when (state) {
-                            ShizukuHelper.State.RUNNING -> AccentGreen
-                            ShizukuHelper.State.PERMISSION_DENIED -> AccentYellow
-                            ShizukuHelper.State.NOT_RUNNING -> Color.White.copy(alpha = 0.4f)
-                            else -> Color.White.copy(alpha = 0.3f)
-                        }
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Bolt, null, tint = when (state) {
+                        ShizukuHelper.State.RUNNING -> AccentGreen
+                        ShizukuHelper.State.PERMISSION_DENIED -> AccentYellow
+                        ShizukuHelper.State.NOT_RUNNING -> Color.White.copy(alpha = 0.4f)
+                        else -> Color.White.copy(alpha = 0.3f)
+                    })
                     Column {
-                        Text(
-                            "Shizuku",
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            when (state) {
-                                ShizukuHelper.State.RUNNING -> "Connected — ready to grant permissions"
-                                ShizukuHelper.State.PERMISSION_DENIED -> "Permission denied — open Shizuku app"
-                                ShizukuHelper.State.NOT_RUNNING -> "Not running — start Shizuku first"
-                                ShizukuHelper.State.NOT_INSTALLED -> "Not installed"
-                            },
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
+                        Text("Shizuku", color = Color.White, fontWeight = FontWeight.Medium)
+                        Text(when (state) {
+                            ShizukuHelper.State.RUNNING -> "Connected — ready to grant permissions"
+                            ShizukuHelper.State.PERMISSION_DENIED -> "Permission denied — open Shizuku app"
+                            ShizukuHelper.State.NOT_RUNNING -> "Not running — start Shizuku first"
+                            ShizukuHelper.State.NOT_INSTALLED -> "Not installed"
+                        }, fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
                     }
                 }
-                // Status indicator
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when (state) {
-                                ShizukuHelper.State.RUNNING -> AccentGreen
-                                ShizukuHelper.State.PERMISSION_DENIED -> AccentYellow
-                                else -> Color.White.copy(alpha = 0.3f)
-                            }
-                        )
-                )
+                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(when (state) {
+                    ShizukuHelper.State.RUNNING -> AccentGreen
+                    ShizukuHelper.State.PERMISSION_DENIED -> AccentYellow
+                    else -> Color.White.copy(alpha = 0.3f)
+                }))
             }
         }
     }
 
     @Composable
     private fun SectionLabel(text: String) {
-        Text(
-            text,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 2.sp,
-            color = Color.White.copy(alpha = 0.4f),
-            modifier = Modifier.padding(top = 8.dp)
-        )
+        Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.padding(top = 8.dp))
     }
 
     private fun updateConfig(newConfig: OverlayConfig) {
-        lifecycleScope.launch {
-            configRepo.updateConfig(newConfig)
-        }
+        lifecycleScope.launch { configRepo.updateConfig(newConfig) }
     }
 }

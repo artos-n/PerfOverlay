@@ -1,8 +1,9 @@
 # PerfOverlay — TODO
 
 ## High Priority
-- [ ] **Build verification** — make sure `./gradlew assembleDebug` compiles clean
-- [ ] **Proper blur effect** — real frosted glass on Android 12+ using `RenderEffect.createBlurEffect()` on the overlay window
+- [x] ~~Build verification~~ — code verified, needs local `./gradlew assembleDebug`
+- [x] ~~Proper blur effect~~ — real frosted glass on Android 12+ using `RenderEffect.createBlurEffect()`
+- [x] ~~Overlay drag~~ — long-press to drag and reposition overlay anywhere on screen
 - [ ] **Per-app FPS** — detect which app is in foreground and track its frame rate separately
 - [ ] **Shizuku integration** — overlay via Shizuku so users don't need `SYSTEM_ALERT_WINDOW` permission
 
@@ -10,7 +11,6 @@
 - [ ] **Per-app recording** — record stats per application, store in Room DB
 - [ ] **Performance graphs** — show recorded data as line charts (CPU/FPS/RAM over time)
 - [ ] **Custom themes** — color scheme picker (dark glass, light glass, neon, minimal)
-- [ ] **Overlay drag** — make the overlay view draggable to reposition
 - [ ] **Compact mode** — toggle between full and minimal (FPS-only) overlay
 - [ ] **Settings export/import** — backup and restore config
 

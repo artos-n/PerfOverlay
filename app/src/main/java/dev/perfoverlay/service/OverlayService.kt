@@ -7,6 +7,8 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
 import android.view.WindowManager
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationCompat
@@ -53,9 +55,18 @@ class OverlayService : LifecycleService() {
 
     private lateinit var windowManager: WindowManager
     private var overlayView: ComposeView? = null
+    private var layoutParams: WindowManager.LayoutParams? = null
     private var statsJob: Job? = null
     private val fpsMonitor = FpsMonitor()
     private val configRepo by lazy { ConfigRepository(PerfOverlayApp.instance) }
+
+    // Drag state
+    private var initialX = 0
+    private var initialY = 0
+    private var initialTouchX = 0f
+    private var initialTouchY = 0f
+    private var isDragging = false
+    private val dragThreshold = 10f // pixels before drag starts
 
     override fun onBind(intent: android.content.Intent): IBinder? {
         super.onBind(intent)
@@ -109,7 +120,7 @@ class OverlayService : LifecycleService() {
     private fun showOverlay() {
         if (overlayView != null) return
 
-        val layoutParams = WindowManager.LayoutParams(
+        layoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -127,6 +138,9 @@ class OverlayService : LifecycleService() {
                     OverlayView(stats = stats, config = config)
                 }
             }
+
+            // Enable drag-to-reposition
+            setOnTouchListener(overlayTouchListener)
         }
 
         try {
@@ -136,7 +150,48 @@ class OverlayService : LifecycleService() {
         }
     }
 
+    private val overlayTouchListener = View.OnTouchListener { view, event ->
+        val lp = layoutParams ?: return@OnTouchListener false
+
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                initialX = lp.x
+                initialY = lp.y
+                initialTouchX = event.rawX
+                initialTouchY = event.rawY
+                isDragging = false
+                true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = event.rawX - initialTouchX
+                val dy = event.rawY - initialTouchY
+
+                if (!isDragging && (dx * dx + dy * dy) > dragThreshold * dragThreshold) {
+                    isDragging = true
+                    // Switch gravity to top-left for free positioning
+                    lp.gravity = Gravity.TOP or Gravity.START
+                    lp.x = initialX + dx.toInt()
+                    lp.y = initialY + dy.toInt()
+                }
+
+                if (isDragging) {
+                    lp.x = initialX + dx.toInt()
+                    lp.y = initialY + dy.toInt()
+                    try {
+                        windowManager.updateViewLayout(view, lp)
+                    } catch (_: Exception) {}
+                }
+                true
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                isDragging
+            }
+            else -> false
+        }
+    }
+
     private fun removeOverlay() {
+        overlayView?.setOnTouchListener(null)
         overlayView?.let {
             try {
                 windowManager.removeView(it)
@@ -145,6 +200,7 @@ class OverlayService : LifecycleService() {
             }
         }
         overlayView = null
+        layoutParams = null
     }
 
     private fun getGravity(position: OverlayPosition): Int {

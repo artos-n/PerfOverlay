@@ -20,27 +20,29 @@ Real-time performance overlay for Android. FPS, CPU, GPU, temperatures, RAM, and
 
 ## Glassmorphism UI
 
-Frosted glass cards with gradient accents and clean monospace data layout. Inspired by iOS control center aesthetics — floating, translucent, unobtrusive.
+Frosted glass cards with real gaussian blur (Android 12+ via `RenderEffect`) and gradient accents. Inspired by iOS control center — floating, translucent, unobtrusive. Falls back to layered gradient approximation on older devices.
 
 ```
  ┌─────────────────────────────┐
- │ PERF 144 ▓▓▓ │
- │ │
- │ 🧠 CPU 45% 2.4 GHz │
- │ ▓▓▓▓▓▓▓▓░░░░░░░░░░░░ │
- │ │
- │ 🎮 GPU 62% │
- │ ▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░ │
- │ │
- │ 🌡 CPU 72° GPU 65° │
- │ │
- │ 📶 ↓ 12.3 MB/s ↑ 2.1 │
+ │ PERF  144  ▓▓▓              │
+ │                             │
+ │ 🧠 CPU  45%    2.4 GHz     │
+ │ ▓▓▓▓▓▓▓▓░░░░░░░░░░░░      │
+ │                             │
+ │ 🎮 GPU  62%                │
+ │ ▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░      │
+ │                             │
+ │ 🌡 CPU 72°  GPU 65°        │
+ │                             │
+ │ 📶 ↓ 12.3 MB/s  ↑ 2.1     │
  └─────────────────────────────┘
 ```
 
 ## How It Works
 
 - **No root required** — uses Android's overlay permission (`SYSTEM_ALERT_WINDOW`)
+- **True blur** — Android 12+ uses `RenderEffect.createBlurEffect()` for real frosted glass
+- **Drag to reposition** — long-press and drag the overlay anywhere on screen
 - **Lightweight** — reads `/proc/stat`, `/sys/class/thermal/`, and `TrafficStats` directly
 - **Configurable** — toggle individual stats, adjust opacity/scale, choose overlay position
 - **Persistent** — settings saved via DataStore, survives reboots
@@ -68,9 +70,12 @@ Requires Android Studio Hedgehog+ and JDK 17.
 
 ## Roadmap
 
+- [x] Real frosted-glass blur (Android 12+)
+- [x] Drag-to-reposition overlay
 - [ ] Per-app performance recording & graphs
 - [ ] Shizuku integration (no overlay permission needed)
 - [ ] Custom themes & color schemes
+- [ ] Compact/minimal mode
 - [ ] Widget support
 - [ ] Export performance logs
 

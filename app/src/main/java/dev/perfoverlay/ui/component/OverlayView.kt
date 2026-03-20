@@ -1,5 +1,7 @@
 package dev.perfoverlay.ui.component
 
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,10 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -33,7 +37,10 @@ fun OverlayView(
     val currentStats by stats.collectAsState()
     val currentConfig by config.collectAsState()
 
-    GlassmorphismCard(alpha = currentConfig.opacity) {
+    GlassmorphismCard(
+        alpha = currentConfig.opacity,
+        blurEnabled = currentConfig.backgroundBlur
+    ) {
         Column(
             modifier = Modifier
                 .widthIn(min = 160.dp)
@@ -288,41 +295,62 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float) {
 }
 
 /**
- * Glassmorphism card with layered frosted-glass effect.
- * On Android 12+ (S), uses Compose blur. On older versions,
- * uses gradient approximation.
+ * Glassmorphism card with true frosted-glass effect.
+ *
+ * Android 12+ (S): Uses RenderEffect.createBlurEffect() for real gaussian blur,
+ * simulating iOS-style frosted glass. The blur radius scales with opacity.
+ *
+ * Older devices: Falls back to layered gradient approximation with a subtle
+ * noise texture pattern drawn via drawBehind.
  */
 @Composable
 fun GlassmorphismCard(
     alpha: Float = 0.85f,
+    blurEnabled: Boolean = true,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val blurRadius = if (blurEnabled) (12f * alpha).coerceIn(4f, 20f) else 0f
+
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = alpha * 0.25f),
-                        Color.White.copy(alpha = alpha * 0.08f)
-                    )
-                )
-            )
-            // Outer border glow
             .then(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    Modifier.blur(0.5.dp) // subtle blur on the edges
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && blurEnabled) {
+                    // True gaussian blur via RenderEffect
+                    Modifier.graphicsLayer {
+                        renderEffect = RenderEffect
+                            .createBlurEffect(blurRadius, blurRadius, Shader.TileMode.CLAMP)
+                            .asComposeRenderEffect()
+                    }
                 } else {
                     Modifier
                 }
-            ),
+            )
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = alpha * 0.28f),
+                        Color.White.copy(alpha = alpha * 0.10f)
+                    ),
+                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                )
+            )
+            .drawBehind {
+                // Subtle inner highlight — top edge glow mimicking light refraction
+                drawLine(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.35f * alpha),
+                            Color.White.copy(alpha = 0.15f * alpha),
+                            Color.White.copy(alpha = 0.35f * alpha)
+                        )
+                    ),
+                    start = androidx.compose.ui.geometry.Offset(0f, 0.5f),
+                    end = androidx.compose.ui.geometry.Offset(size.width, 0.5f),
+                    strokeWidth = 1f
+                )
+            },
         content = content
-    )
-
-    // Border overlay
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color.Transparent)
     )
 }

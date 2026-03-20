@@ -13,11 +13,22 @@ Real-time performance overlay for Android. FPS, CPU, GPU, temperatures, RAM, and
 |------|---------|
 | FPS | Real-time frame rate via Choreographer, color-coded badge (🟢🟡🔴) |
 | Frame Time | Per-frame duration strip, dropped frame detection, P95/P99 stats |
-| CPU | Usage % + frequency (MHz) with animated bar, delta-based from `/proc/stat` |
+| CPU | Usage % + frequency (MHz) + governor with animated bar, delta-based from `/proc/stat` |
 | GPU | Usage % — Adreno & Mali support via sysfs |
 | Temperature | CPU, GPU, battery temps (device-dependent, reads `/sys/class/thermal/`) |
 | RAM | Used/total with usage bar |
 | Network | Download/upload speeds in real-time via TrafficStats |
+| Throttle Detection | Real-time warning when CPU/GPU frequency drops under thermal load |
+| Anomaly Timeline | Rolling baseline with 2σ spike detection per metric |
+
+## Modes
+
+| Mode | Description |
+|------|-------------|
+| Overlay | Floating performance stats on any app |
+| Record | Capture sessions with per-app tracking, graphs, and export |
+| Stress Test | Controlled CPU load with thermal ceiling detection |
+| Compare | Side-by-side session comparison with delta visualization |
 
 ## Themes
 
@@ -97,9 +108,13 @@ Requires Android Studio Hedgehog+ and JDK 17.
 - [x] Export performance logs (CSV & JSON)
 - [x] Auto-start on boot
 - [x] Frame time graph with dropped frame detection
-- [ ] Thermal throttling detection
-- [ ] Anomaly timeline
-- [ ] Session diff / comparison
+- [x] Thermal throttling detection & warning overlay
+- [x] Anomaly timeline with rolling baseline detection
+- [x] CPU governor tracking & display
+- [x] Session diff / comparison with delta visualization
+- [x] Quick Settings tile with live FPS
+- [x] Stress test mode with thermal ceiling detection
+- [ ] Widget support
 - [ ] CPU governor tracking
 - [ ] Quick Settings tile
 - [ ] Stress test mode

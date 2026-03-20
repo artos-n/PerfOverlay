@@ -6,8 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [RecordingSession::class, StatSample::class],
-    version = 2,
+    entities = [RecordingSession::class, StatSample::class, AnomalyEventEntity::class],
+    version = 3,
     exportSchema = false
 )
 abstract class PerfOverlayDatabase : RoomDatabase() {

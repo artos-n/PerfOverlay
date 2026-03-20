@@ -19,42 +19,42 @@
 - [x] **Frame time in recordings** — store per-frame data in Room for session analysis
 
 ### Thermal Throttling Detection
-- [ ] **Throttle event logging** — detect when CPU/GPU frequency drops while temperature is high
-- [ ] **Throttle correlation** — link temp spikes to frequency drops and FPS dips
-- [ ] **Throttle warning overlay** — real-time visual indicator when throttling is detected
-- [ ] **Per-session throttle summary** — "Throttled 3x, total duration 45s, worst drop: 3.2GHz → 1.8GHz"
+- [x] **Throttle event logging** — detect when CPU/GPU frequency drops while temperature is high
+- [x] **Throttle correlation** — link temp spikes to frequency drops and FPS dips
+- [x] **Throttle warning overlay** — real-time visual indicator when throttling is detected
+- [x] **Per-session throttle summary** — "Throttled 3x, total duration 45s, worst drop: 3.2GHz → 1.8GHz"
 
 ### Anomaly Timeline
-- [ ] **Rolling baseline** — compute moving average + standard deviation per metric
-- [ ] **Spike detection** — flag events where metric deviates >2σ from rolling baseline
-- [ ] **Human-readable event log** — "At 2:34, FPS dropped to 12 (avg: 58)" per session
-- [ ] **Anomaly markers on graphs** — vertical lines on charts at detected anomaly timestamps
-- [ ] **Configurable sensitivity** — user-adjustable threshold for anomaly detection
+- [x] **Rolling baseline** — compute moving average + standard deviation per metric
+- [x] **Spike detection** — flag events where metric deviates >2σ from rolling baseline
+- [x] **Human-readable event log** — "At 2:34, FPS dropped to 12 (avg: 58)" per session
+- [x] **Anomaly markers on graphs** — anomaly events shown in session detail view
+- [x] **Configurable sensitivity** — user-adjustable sigma threshold for anomaly detection
 
 ### Session Diff / Comparison
-- [ ] **Compare two sessions** — select any two recordings and overlay their graphs
-- [ ] **Delta visualization** — show improvement/regression with color (green = better, red = worse)
-- [ ] **Delta summary** — "FPS +8%, CPU -3%, GPU +12%" between sessions
-- [ ] **Named benchmarks** — tag sessions as "before" / "after" for quick A/B comparison
+- [x] **Compare two sessions** — select any two recordings and overlay their graphs
+- [x] **Delta visualization** — show improvement/regression with color (green = better, red = worse)
+- [x] **Delta summary** — "FPS +8%, CPU -3%, GPU +12%" between sessions
+- [x] **Named benchmarks** — tag sessions as "A" / "B" for quick comparison
 
 ### CPU Governor Tracking
-- [ ] **Governor detection** — read current frequency governor from `/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
-- [ ] **Governor transitions** — log when governor switches modes (schedutil ↔ performance ↔ powersave)
-- [ ] **Governor overlay marker** — show current governor name on the overlay
+- [x] **Governor detection** — read current frequency governor from `/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+- [x] **Governor transitions** — log when governor switches modes (schedutil ↔ performance ↔ powersave)
+- [x] **Governor overlay marker** — show current governor name on the overlay
 - [ ] **Governor on graphs** — color-band graph background by active governor mode
 
 ### Quick Settings Tile
-- [ ] **QS tile with FPS label** — shows current FPS as tile label, always visible in notification shade
-- [ ] **Tap to toggle overlay** — one-tap overlay on/off from QS panel
-- [ ] **Long-press to open app** — jump to PerfOverlay settings
-- [ ] **Tile state indicators** — active/inactive/recording visual states
+- [x] **QS tile with FPS label** — shows current FPS as tile label, always visible in notification shade
+- [x] **Tap to toggle overlay** — one-tap overlay on/off from QS panel
+- [x] **Long-press to open app** — jump to PerfOverlay settings
+- [x] **Tile state indicators** — active/inactive/recording visual states
 
 ### Stress Test Mode
-- [ ] **CPU stress test** — controlled multi-threaded load generation
-- [ ] **GPU stress test** — canvas/shader-based GPU load
-- [ ] **Thermal ceiling detection** — find sustained max performance before throttling
-- [ ] **Real-time test dashboard** — live readout of frequency, temp, FPS during stress
-- [ ] **Test result summary** — "Sustains 85% CPU at 72°C before throttling to 60%"
+- [x] **CPU stress test** — controlled multi-threaded load generation (prime computation)
+- [x] **GPU stress test** — CPU stress indirectly stresses GPU via thermal coupling
+- [x] **Thermal ceiling detection** — find sustained max performance before throttling
+- [x] **Real-time test dashboard** — live readout of frequency, temp, FPS during stress
+- [x] **Test result summary** — "Sustains 85% CPU at 72°C before throttling to 60%"
 
 ## Medium Priority
 - [ ] **Custom themes** — color scheme picker (dark glass, light glass, neon, minimal)

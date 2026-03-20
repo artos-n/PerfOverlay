@@ -22,8 +22,10 @@ import dev.perfoverlay.data.OverlayPosition
 import dev.perfoverlay.data.PerformanceStats
 import dev.perfoverlay.ui.component.OverlayView
 import dev.perfoverlay.ui.theme.PerfOverlayTheme
+import dev.perfoverlay.util.AnomalyDetector
 import dev.perfoverlay.util.FpsMonitor
 import dev.perfoverlay.util.StatsCollector
+import dev.perfoverlay.util.ThrottleDetector
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -58,7 +60,12 @@ class OverlayService : LifecycleService() {
     private var layoutParams: WindowManager.LayoutParams? = null
     private var statsJob: Job? = null
     private val fpsMonitor = FpsMonitor()
+    private val throttleDetector = ThrottleDetector()
+    private val anomalyDetector = AnomalyDetector()
     private val configRepo by lazy { ConfigRepository(PerfOverlayApp.instance) }
+
+    // Session start time for anomaly timestamps
+    private var sessionStartTime = 0L
 
     // Drag state
     private var initialX = 0
@@ -82,6 +89,9 @@ class OverlayService : LifecycleService() {
 
         // Start FPS monitoring
         fpsMonitor.start()
+        throttleDetector.reset()
+        anomalyDetector.reset()
+        sessionStartTime = System.currentTimeMillis()
 
         // Collect config changes
         lifecycleScope.launch {
@@ -106,14 +116,44 @@ class OverlayService : LifecycleService() {
         statsJob = lifecycleScope.launch {
             while (isActive) {
                 val baseStats = StatsCollector.collect(applicationContext)
+                val fps = fpsMonitor.getFps()
+                val avgFt = fpsMonitor.getAvgFrameTimeMs()
+                val p95Ft = fpsMonitor.getP95FrameTimeMs()
+                val p99Ft = fpsMonitor.getP99FrameTimeMs()
+                val dropped = fpsMonitor.getDroppedFrames()
+                val total = fpsMonitor.getTotalFrames()
+                val strip = fpsMonitor.getFrameTimeStrip()
+
+                // Throttle detection
+                val throttleState = throttleDetector.process(
+                    cpuFreq = baseStats.cpuFrequency,
+                    gpuUsage = baseStats.gpuUsage,
+                    cpuTemp = baseStats.cpuTemp,
+                    gpuTemp = baseStats.gpuTemp,
+                    fps = fps,
+                    timestamp = System.currentTimeMillis()
+                )
+
+                // Anomaly detection
+                val relativeTime = System.currentTimeMillis() - sessionStartTime
+                val newAnomalies = anomalyDetector.process(
+                    fps = fps,
+                    cpuUsage = baseStats.cpuUsage,
+                    gpuUsage = baseStats.gpuUsage,
+                    frameTimeMs = avgFt,
+                    relativeTimestamp = relativeTime
+                )
+
                 stats.value = baseStats.copy(
-                    fps = fpsMonitor.getFps(),
-                    avgFrameTimeMs = fpsMonitor.getAvgFrameTimeMs(),
-                    p95FrameTimeMs = fpsMonitor.getP95FrameTimeMs(),
-                    p99FrameTimeMs = fpsMonitor.getP99FrameTimeMs(),
-                    droppedFrames = fpsMonitor.getDroppedFrames(),
-                    totalFrames = fpsMonitor.getTotalFrames(),
-                    frameTimeStrip = fpsMonitor.getFrameTimeStrip()
+                    fps = fps,
+                    avgFrameTimeMs = avgFt,
+                    p95FrameTimeMs = p95Ft,
+                    p99FrameTimeMs = p99Ft,
+                    droppedFrames = dropped,
+                    totalFrames = total,
+                    frameTimeStrip = strip,
+                    throttleState = throttleState,
+                    anomalyCount = anomalyDetector.getAnomalyCount()
                 )
                 delay(config.value.refreshIntervalMs)
             }

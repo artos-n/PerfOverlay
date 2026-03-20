@@ -5,6 +5,8 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Build
 import dev.perfoverlay.PerfOverlayApp
+import dev.perfoverlay.util.AnomalyDetector
+import dev.perfoverlay.util.ThrottleDetector
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -206,6 +208,11 @@ class RecordingManager(private val context: Context) {
      * Get samples for a session.
      */
     fun getSamplesForSession(sessionId: Long) = dao.getSamplesForSession(sessionId)
+
+    /**
+     * Get anomaly events for a session.
+     */
+    fun getAnomalyEvents(sessionId: Long) = dao.getAnomalyEvents(sessionId)
 
     /**
      * Delete a session and its samples.

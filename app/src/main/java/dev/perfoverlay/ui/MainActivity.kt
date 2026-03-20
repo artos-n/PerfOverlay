@@ -71,7 +71,8 @@ class MainActivity : ComponentActivity() {
 
     enum class Tab(val icon: ImageVector, val label: String) {
         OVERLAY(Icons.Rounded.Speed, "Overlay"),
-        RECORD(Icons.Rounded.Timeline, "Record")
+        RECORD(Icons.Rounded.Timeline, "Record"),
+        TEST(Icons.Rounded.Bolt, "Stress")
     }
 
     @Composable
@@ -89,6 +90,10 @@ class MainActivity : ComponentActivity() {
                         configRefreshInterval = configRepo.config
                             .collectAsState(initial = OverlayConfig()).value
                             .refreshIntervalMs
+                    )
+                    Tab.TEST -> StressTestScreen(
+                        statsProvider = { OverlayService.stats.value },
+                        onBack = { selectedTab = Tab.OVERLAY }
                     )
                 }
             }

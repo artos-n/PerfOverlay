@@ -88,7 +88,7 @@ private fun FullOverlayView(
                     icon = Icons.Rounded.Memory,
                     label = "CPU",
                     value = "${stats.cpuUsage.toInt()}%",
-                    subValue = if (stats.cpuFrequency > 0) "${stats.cpuFrequency} MHz" else null,
+                    subValue = if (stats.cpuFrequency > 0) "${stats.cpuFrequency} MHz${if (stats.cpuGovernor.isNotEmpty()) " ${stats.cpuGovernor}" else ""}" else null,
                     color = theme.accentPrimary,
                     usage = stats.cpuUsage / 100f,
                     scale = config.scale
@@ -126,6 +126,16 @@ private fun FullOverlayView(
             if (config.showNetwork) {
                 NetworkRow(stats, config.scale, theme)
             }
+
+            // Throttle warning
+            if (stats.throttleState.isThrottling) {
+                ThrottleWarningRow(stats.throttleState, config.scale, theme)
+            }
+
+            // Anomaly count
+            if (stats.anomalyCount > 0) {
+                AnomalyCountRow(stats.anomalyCount, config.scale, theme)
+            }
         }
     }
 }
@@ -156,6 +166,11 @@ private fun CompactOverlayView(
             // FPS badge
             if (config.showFps) {
                 CompactFpsBadge(stats.fps, config.scale, theme)
+            }
+
+            // Throttle warning in compact mode
+            if (stats.throttleState.isThrottling) {
+                CompactStatPill("⚠", "THROT", theme.accentDanger, config.scale)
             }
 
             // Stat pills
@@ -558,6 +573,84 @@ private fun FrameTimeStrip(
                 }
             }
         }
+    }
+}
+
+/**
+ * Throttle warning indicator — pulsing red alert when thermal throttling is detected.
+ */
+@Composable
+private fun ThrottleWarningRow(
+    throttleState: dev.perfoverlay.util.ThrottleState,
+    scale: Float,
+    theme: OverlayTheme
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp * scale))
+            .background(theme.accentDanger.copy(alpha = 0.15f))
+            .padding(horizontal = 8.dp * scale, vertical = 4.dp * scale),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp * scale)
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Warning,
+            contentDescription = "Throttling",
+            modifier = Modifier.size((12.dp * scale)),
+            tint = theme.accentDanger
+        )
+        Text(
+            text = "THROTTLED",
+            fontSize = (8.sp * scale),
+            fontWeight = FontWeight.Bold,
+            color = theme.accentDanger,
+            letterSpacing = (1.sp * scale)
+        )
+        Text(
+            text = "CPU ↓${String.format("%.0f", throttleState.cpuFreqDropPct)}%",
+            fontSize = (8.sp * scale),
+            fontFamily = FontFamily.Monospace,
+            color = theme.accentDanger.copy(alpha = 0.8f)
+        )
+        if (throttleState.cpuTemp > 0) {
+            Text(
+                text = "${throttleState.cpuTemp.toInt()}°C",
+                fontSize = (8.sp * scale),
+                fontFamily = FontFamily.Monospace,
+                color = theme.accentWarn
+            )
+        }
+    }
+}
+
+/**
+ * Anomaly count badge — shows detected anomaly events.
+ */
+@Composable
+private fun AnomalyCountRow(
+    count: Int,
+    scale: Float,
+    theme: OverlayTheme
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Bolt,
+            contentDescription = "Anomalies",
+            modifier = Modifier.size((10.dp * scale)),
+            tint = theme.accentWarn.copy(alpha = 0.6f)
+        )
+        Spacer(Modifier.width(3.dp * scale))
+        Text(
+            text = "$count anomaly${if (count != 1) "s" else ""}",
+            fontSize = (7.sp * scale),
+            fontFamily = FontFamily.Monospace,
+            color = theme.accentWarn.copy(alpha = 0.6f)
+        )
     }
 }
 

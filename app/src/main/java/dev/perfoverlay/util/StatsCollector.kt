@@ -16,6 +16,55 @@ object StatsCollector {
     private var prevIdle = 0L
     private var prevTotal = 0L
 
+    /**
+     * Reads the current CPU frequency governor.
+     * Returns e.g. "schedutil", "performance", "powersave", "interactive".
+     */
+    fun getCpuGovernor(): String {
+        return try {
+            for (i in 0..7) {
+                val file = File("/sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor")
+                if (file.exists()) {
+                    val reader = BufferedReader(FileReader(file))
+                    val governor = reader.readLine().trim()
+                    reader.close()
+                    if (governor.isNotEmpty()) return governor
+                }
+            }
+            ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * Reads the max CPU frequency (in MHz).
+     */
+    fun getCpuMaxFrequency(): Long {
+        return try {
+            val reader = BufferedReader(FileReader("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"))
+            val freq = reader.readLine().trim().toLong() / 1000
+            reader.close()
+            freq
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
+    /**
+     * Reads the min CPU frequency (in MHz).
+     */
+    fun getCpuMinFrequency(): Long {
+        return try {
+            val reader = BufferedReader(FileReader("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq"))
+            val freq = reader.readLine().trim().toLong() / 1000
+            reader.close()
+            freq
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
     fun collect(context: Context): dev.perfoverlay.data.PerformanceStats {
         val now = System.currentTimeMillis()
 
@@ -39,6 +88,9 @@ object StatsCollector {
         // CPU (delta-based for accuracy)
         val cpuUsage = getCpuUsageDelta()
         val cpuFreq = getCpuFrequency()
+        val cpuGovernor = getCpuGovernor()
+        val cpuMaxFreq = getCpuMaxFrequency()
+        val cpuMinFreq = getCpuMinFrequency()
 
         // GPU
         val gpuUsage = getGpuUsage()
@@ -49,6 +101,9 @@ object StatsCollector {
         return dev.perfoverlay.data.PerformanceStats(
             cpuUsage = cpuUsage,
             cpuFrequency = cpuFreq,
+            cpuGovernor = cpuGovernor,
+            cpuMaxFreq = cpuMaxFreq,
+            cpuMinFreq = cpuMinFreq,
             gpuUsage = gpuUsage,
             cpuTemp = temps.getOrElse(0) { 0f },
             gpuTemp = temps.getOrElse(1) { 0f },

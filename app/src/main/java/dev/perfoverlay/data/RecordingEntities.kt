@@ -148,4 +148,60 @@ interface RecordingDao {
 
     @Query("SELECT AVG(gpuUsage) FROM stat_samples WHERE sessionId = :sessionId")
     suspend fun getAvgGpu(sessionId: Long): Float?
+
+    // --- Anomaly Events ---
+
+    @Insert
+    suspend fun insertAnomalyEvent(event: AnomalyEventEntity)
+
+    @Insert
+    suspend fun insertAnomalyEvents(events: List<AnomalyEventEntity>)
+
+    @Query("SELECT * FROM anomaly_events WHERE sessionId = :sessionId ORDER BY timestamp ASC")
+    fun getAnomalyEvents(sessionId: Long): Flow<List<AnomalyEventEntity>>
+
+    @Query("SELECT * FROM anomaly_events WHERE sessionId = :sessionId ORDER BY timestamp ASC")
+    suspend fun getAnomalyEventsOnce(sessionId: Long): List<AnomalyEventEntity>
+
+    @Query("SELECT COUNT(*) FROM anomaly_events WHERE sessionId = :sessionId")
+    suspend fun getAnomalyCount(sessionId: Long): Int
 }
+
+/**
+ * An anomaly event recorded during a session.
+ * Stores deviations from rolling baseline for each metric.
+ */
+@Entity(
+    tableName = "anomaly_events",
+    foreignKeys = [ForeignKey(
+        entity = RecordingSession::class,
+        parentColumns = ["id"],
+        childColumns = ["sessionId"],
+        onDelete = ForeignKey.CASCADE
+    )],
+    indices = [Index("sessionId"), Index("timestamp")]
+)
+data class AnomalyEventEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+
+    val sessionId: Long,
+
+    /** Timestamp relative to session start (millis) */
+    val timestamp: Long,
+
+    /** Metric name: "FPS", "CPU", "GPU", "Frame Time" */
+    val metric: String,
+
+    /** The anomalous value */
+    val value: Float,
+
+    /** Rolling average at time of detection */
+    val baseline: Float,
+
+    /** How many standard deviations away */
+    val deviationSigma: Float,
+
+    /** true = spike up, false = drop */
+    val isSpike: Boolean
+)

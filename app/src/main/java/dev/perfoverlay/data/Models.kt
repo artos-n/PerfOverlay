@@ -1,5 +1,7 @@
 package dev.perfoverlay.data
 
+import dev.perfoverlay.util.ThrottleState
+
 data class PerformanceStats(
     val fps: Int = 0,
     val avgFrameTimeMs: Float = 0f,
@@ -10,6 +12,9 @@ data class PerformanceStats(
     val frameTimeStrip: FloatArray = FloatArray(0),
     val cpuUsage: Float = 0f,
     val cpuFrequency: Long = 0L,
+    val cpuGovernor: String = "",
+    val cpuMaxFreq: Long = 0L,
+    val cpuMinFreq: Long = 0L,
     val gpuUsage: Float = 0f,
     val cpuTemp: Float = 0f,
     val gpuTemp: Float = 0f,
@@ -19,6 +24,8 @@ data class PerformanceStats(
     val ramTotal: Long = 0L,
     val downloadSpeed: Long = 0L,
     val uploadSpeed: Long = 0L,
+    val throttleState: ThrottleState = ThrottleState(),
+    val anomalyCount: Int = 0,
     val timestamp: Long = System.currentTimeMillis()
 ) {
     override fun equals(other: Any?): Boolean {
@@ -33,6 +40,9 @@ data class PerformanceStats(
             frameTimeStrip.contentEquals(other.frameTimeStrip) &&
             cpuUsage == other.cpuUsage &&
             cpuFrequency == other.cpuFrequency &&
+            cpuGovernor == other.cpuGovernor &&
+            cpuMaxFreq == other.cpuMaxFreq &&
+            cpuMinFreq == other.cpuMinFreq &&
             gpuUsage == other.gpuUsage &&
             cpuTemp == other.cpuTemp &&
             gpuTemp == other.gpuTemp &&
@@ -42,6 +52,8 @@ data class PerformanceStats(
             ramTotal == other.ramTotal &&
             downloadSpeed == other.downloadSpeed &&
             uploadSpeed == other.uploadSpeed &&
+            throttleState == other.throttleState &&
+            anomalyCount == other.anomalyCount &&
             timestamp == other.timestamp
     }
 
@@ -55,6 +67,9 @@ data class PerformanceStats(
         result = 31 * result + frameTimeStrip.contentHashCode()
         result = 31 * result + cpuUsage.hashCode()
         result = 31 * result + cpuFrequency.hashCode()
+        result = 31 * result + cpuGovernor.hashCode()
+        result = 31 * result + cpuMaxFreq.hashCode()
+        result = 31 * result + cpuMinFreq.hashCode()
         result = 31 * result + gpuUsage.hashCode()
         result = 31 * result + cpuTemp.hashCode()
         result = 31 * result + gpuTemp.hashCode()
@@ -64,6 +79,8 @@ data class PerformanceStats(
         result = 31 * result + ramTotal.hashCode()
         result = 31 * result + downloadSpeed.hashCode()
         result = 31 * result + uploadSpeed.hashCode()
+        result = 31 * result + throttleState.hashCode()
+        result = 31 * result + anomalyCount
         result = 31 * result + timestamp.hashCode()
         return result
     }

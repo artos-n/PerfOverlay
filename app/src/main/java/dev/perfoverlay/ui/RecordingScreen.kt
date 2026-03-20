@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import dev.perfoverlay.data.*
 import dev.perfoverlay.ui.component.*
 import dev.perfoverlay.ui.theme.*
+import dev.perfoverlay.util.AnomalyDetector
 import dev.perfoverlay.util.ExportManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -42,7 +43,17 @@ fun RecordingScreen(
     val sessions by recordingManager.getAllSessions().collectAsState(initial = emptyList())
 
     var selectedSessionId by remember { mutableStateOf<Long?>(null) }
+    var showCompare by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    // If compare mode, show compare screen
+    if (showCompare) {
+        SessionCompareScreen(
+            recordingManager = recordingManager,
+            onBack = { showCompare = false }
+        )
+        return
+    }
 
     // If a session is selected, show its detail
     if (selectedSessionId != null) {
@@ -159,7 +170,20 @@ fun RecordingScreen(
 
         // Sessions list
         if (sessions.isNotEmpty()) {
-            SectionLabel("PAST RECORDINGS")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SectionLabel("PAST RECORDINGS")
+                if (sessions.size >= 2) {
+                    TextButton(onClick = { showCompare = true }) {
+                        Icon(Icons.Rounded.Compare, contentDescription = null, modifier = Modifier.size(16.dp), tint = AccentBlue)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Compare", color = AccentBlue, fontSize = 12.sp)
+                    }
+                }
+            }
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.weight(1f)
@@ -402,6 +426,18 @@ private fun SessionDetailView(
                 )
             }
 
+            // Frame Time (P95)
+            item {
+                PerformanceGraph(
+                    samples = samples,
+                    valueExtractor = { it.p95FrameTimeMs },
+                    maxValue = 50f,
+                    label = "Frame Time (P95)",
+                    unit = "ms",
+                    lineColor = AccentYellow
+                )
+            }
+
             // CPU + GPU overlay
             item {
                 MultiMetricGraph(
@@ -461,6 +497,22 @@ private fun SessionDetailView(
                 )
             }
 
+            // Dropped frames
+            item {
+                PerformanceGraph(
+                    samples = samples,
+                    valueExtractor = { it.droppedFrames.toFloat() },
+                    maxValue = (samples.maxOfOrNull { it.droppedFrames } ?: 10).toFloat().coerceAtLeast(10f),
+                    label = "Dropped Frames",
+                    lineColor = AccentRed
+                )
+            }
+
+            // Anomaly events
+            item {
+                AnomalyEventsSection(sessionId, recordingManager)
+            }
+
             // Time axis
             item {
                 TimeAxisLabels(samples = samples)
@@ -498,4 +550,113 @@ private fun SectionLabel(text: String) {
         color = Color.White.copy(alpha = 0.4f),
         modifier = Modifier.padding(top = 4.dp)
     )
+}
+
+/**
+ * Shows detected anomaly events for a recording session.
+ */
+@Composable
+private fun AnomalyEventsSection(
+    sessionId: Long,
+    recordingManager: RecordingManager
+) {
+    val anomalies by recordingManager.getAnomalyEvents(sessionId).collectAsState(initial = emptyList())
+
+    if (anomalies.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White.copy(alpha = 0.04f))
+                .padding(12.dp)
+        ) {
+            Text(
+                text = "Anomalies",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "No anomalies detected",
+                fontSize = 11.sp,
+                color = Color.White.copy(alpha = 0.3f)
+            )
+        }
+        return
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .padding(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Anomalies",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+            Text(
+                text = "${anomalies.size} detected",
+                fontSize = 10.sp,
+                color = AccentYellow.copy(alpha = 0.7f)
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        anomalies.forEach { event ->
+            val timeStr = AnomalyDetector.AnomalyEvent.formatTimestamp(event.timestamp)
+            val direction = if (event.isSpike) "↑" else "↓"
+            val color = when (event.metric) {
+                "FPS" -> AccentGreen
+                "CPU" -> AccentBlue
+                "GPU" -> AccentYellow
+                "Frame Time" -> AccentRed
+                else -> Color.White
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = timeStr,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White.copy(alpha = 0.4f),
+                    modifier = Modifier.width(36.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                )
+                Text(
+                    text = "${event.metric} $direction",
+                    fontSize = 10.sp,
+                    color = color.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "${String.format("%.0f", event.value)} (avg: ${String.format("%.0f", event.baseline)})",
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White.copy(alpha = 0.4f)
+                )
+            }
+        }
+    }
 }

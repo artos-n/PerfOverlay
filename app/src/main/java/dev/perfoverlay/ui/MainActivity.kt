@@ -191,6 +191,7 @@ class MainActivity : ComponentActivity() {
 
             StatsTogglesCard(config)
             AppearanceCard(config)
+            ThemePickerCard(config)
             PositionCard(config)
             RefreshRateCard(config)
 
@@ -350,6 +351,46 @@ class MainActivity : ComponentActivity() {
         SectionLabel("APPEARANCE")
         GlassmorphismCard(alpha = 0.8f) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Compact mode toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.CropFree, null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+                        Column {
+                            Text("Compact mode", color = Color.White, fontSize = 14.sp)
+                            Text("Minimal horizontal bar", fontSize = 11.sp, color = Color.White.copy(alpha = 0.4f))
+                        }
+                    }
+                    Switch(
+                        checked = config.compactMode,
+                        onCheckedChange = { updateConfig(config.copy(compactMode = it)) },
+                        colors = SwitchDefaults.colors(checkedThumbColor = AccentBlue, checkedTrackColor = AccentBlue.copy(alpha = 0.3f))
+                    )
+                }
+
+                // Background blur toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.BlurOn, null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+                        Column {
+                            Text("Background blur", color = Color.White, fontSize = 14.sp)
+                            Text("Frosted glass effect (Android 12+)", fontSize = 11.sp, color = Color.White.copy(alpha = 0.4f))
+                        }
+                    }
+                    Switch(
+                        checked = config.backgroundBlur,
+                        onCheckedChange = { updateConfig(config.copy(backgroundBlur = it)) },
+                        colors = SwitchDefaults.colors(checkedThumbColor = AccentBlue, checkedTrackColor = AccentBlue.copy(alpha = 0.3f))
+                    )
+                }
+
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Opacity", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
                     Text("${(config.opacity * 100).toInt()}%", color = Color.White, fontSize = 13.sp)
@@ -360,6 +401,66 @@ class MainActivity : ComponentActivity() {
                     Text("${(config.scale * 100).toInt()}%", color = Color.White, fontSize = 13.sp)
                 }
                 Slider(value = config.scale, onValueChange = { updateConfig(config.copy(scale = it)) }, valueRange = 0.5f..2f, colors = SliderDefaults.colors(thumbColor = AccentGreen, activeTrackColor = AccentGreen))
+            }
+        }
+    }
+
+    @Composable
+    private fun ThemePickerCard(config: OverlayConfig) {
+        SectionLabel("THEME")
+        GlassmorphismCard(alpha = 0.8f) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                OverlayTheme.entries.chunked(3).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        row.forEach { theme ->
+                            val isSelected = config.themeName == theme.name
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(
+                                        if (isSelected) theme.accentPrimary.copy(alpha = 0.2f)
+                                        else Color.White.copy(alpha = 0.05f)
+                                    )
+                                    .clickable { updateConfig(config.copy(themeName = theme.name)) }
+                                    .padding(vertical = 10.dp, horizontal = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    // Color preview dots
+                                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                        listOf(theme.accentPrimary, theme.accentSecondary, theme.accentDanger).forEach { c ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(8.dp)
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(c)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        theme.displayName,
+                                        fontSize = 11.sp,
+                                        color = if (isSelected) theme.accentPrimary else Color.White.copy(alpha = 0.6f),
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        }
+                        // Fill remaining slots in the row
+                        if (row.size < 3) {
+                            repeat(3 - row.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -23,6 +23,8 @@ class ConfigRepository(private val context: Context) {
         private val REFRESH_INTERVAL = longPreferencesKey("refresh_interval")
         private val SCALE = floatPreferencesKey("scale")
         private val BACKGROUND_BLUR = booleanPreferencesKey("background_blur")
+        private val THEME_NAME = stringPreferencesKey("theme_name")
+        private val COMPACT_MODE = booleanPreferencesKey("compact_mode")
     }
 
     val config: Flow<OverlayConfig> = context.dataStore.data.map { prefs ->
@@ -38,7 +40,9 @@ class ConfigRepository(private val context: Context) {
             showRam = prefs[SHOW_RAM] ?: false,
             refreshIntervalMs = prefs[REFRESH_INTERVAL] ?: 1000L,
             scale = prefs[SCALE] ?: 1.0f,
-            backgroundBlur = prefs[BACKGROUND_BLUR] ?: true
+            backgroundBlur = prefs[BACKGROUND_BLUR] ?: true,
+            themeName = prefs[THEME_NAME] ?: "OCEAN",
+            compactMode = prefs[COMPACT_MODE] ?: false
         )
     }
 
@@ -55,6 +59,8 @@ class ConfigRepository(private val context: Context) {
             prefs[REFRESH_INTERVAL] = config.refreshIntervalMs
             prefs[SCALE] = config.scale
             prefs[BACKGROUND_BLUR] = config.backgroundBlur
+            prefs[THEME_NAME] = config.themeName
+            prefs[COMPACT_MODE] = config.compactMode
         }
     }
 }

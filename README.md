@@ -18,6 +18,25 @@ Real-time performance overlay for Android. FPS, CPU, GPU, temperatures, RAM, and
 | RAM | Used/total with usage bar |
 | Network | Download/upload speeds in real-time via TrafficStats |
 
+## Themes
+
+Six built-in color themes for the overlay:
+
+| Theme | Vibe |
+|-------|------|
+| 🌊 Ocean | Default blue-green, calm and clean |
+| 💜 Amethyst | Purple-pink, elegant and bold |
+| 💚 Emerald | Green, nature-inspired freshness |
+| 🌅 Sunset | Orange-warm, energetic and fiery |
+| ⬜ Mono | Grayscale, minimal and focused |
+| ⚡ Cyber | Neon cyan-magenta, cyberpunk intensity |
+
+Themes affect all accent colors, FPS badge states, stat bars, and the glassmorphism glow.
+
+## Compact Mode
+
+Toggle compact mode for a minimal horizontal bar overlay — FPS badge + condensed stat pills side by side. Perfect for gaming or when you want maximum screen real estate.
+
 ## Glassmorphism UI
 
 Frosted glass cards with real gaussian blur (Android 12+ via `RenderEffect`) and gradient accents. Inspired by iOS control center — floating, translucent, unobtrusive. Falls back to layered gradient approximation on older devices.
@@ -71,11 +90,12 @@ Requires Android Studio Hedgehog+ and JDK 17.
 - [x] Real frosted-glass blur (Android 12+)
 - [x] Drag-to-reposition overlay
 - [x] Shizuku integration (auto-grant overlay permission)
-- [ ] Per-app performance recording & graphs
-- [ ] Custom themes & color schemes
-- [ ] Compact/minimal mode
+- [x] Per-app performance recording & graphs
+- [x] Custom themes & color schemes (6 themes)
+- [x] Compact/minimal mode
+- [x] Export performance logs (CSV & JSON)
+- [x] Auto-start on boot
 - [ ] Widget support
-- [ ] Export performance logs
 
 ## Inspired By
 

@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposeRenderEffect
@@ -25,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.perfoverlay.data.OverlayConfig
 import dev.perfoverlay.data.PerformanceStats
-import dev.perfoverlay.ui.theme.*
+import dev.perfoverlay.ui.theme.OverlayTheme
 import dev.perfoverlay.util.StatsCollector
 import kotlinx.coroutines.flow.StateFlow
 
@@ -36,68 +37,189 @@ fun OverlayView(
 ) {
     val currentStats by stats.collectAsState()
     val currentConfig by config.collectAsState()
+    val theme = OverlayTheme.fromName(currentConfig.themeName)
 
+    if (currentConfig.compactMode) {
+        CompactOverlayView(currentStats, currentConfig, theme)
+    } else {
+        FullOverlayView(currentStats, currentConfig, theme)
+    }
+}
+
+// ─── Full (Classic) Overlay ────────────────────────────────────
+
+@Composable
+private fun FullOverlayView(
+    stats: PerformanceStats,
+    config: OverlayConfig,
+    theme: OverlayTheme
+) {
     GlassmorphismCard(
-        alpha = currentConfig.opacity,
-        blurEnabled = currentConfig.backgroundBlur
+        alpha = config.opacity,
+        blurEnabled = config.backgroundBlur,
+        glowColor = theme.cardGlow
     ) {
         Column(
             modifier = Modifier
                 .widthIn(min = 160.dp)
-                .padding(10.dp * currentConfig.scale),
-            verticalArrangement = Arrangement.spacedBy(6.dp * currentConfig.scale)
+                .padding(10.dp * config.scale),
+            verticalArrangement = Arrangement.spacedBy(6.dp * config.scale)
         ) {
-            OverlayHeader(currentStats.fps, currentConfig.showFps, currentConfig.scale)
+            OverlayHeader(stats.fps, config.showFps, config.scale, theme)
 
-            if (currentConfig.showCpu) {
+            if (config.showCpu) {
                 StatRow(
                     icon = Icons.Rounded.Memory,
                     label = "CPU",
-                    value = "${currentStats.cpuUsage.toInt()}%",
-                    subValue = if (currentStats.cpuFrequency > 0) "${currentStats.cpuFrequency} MHz" else null,
-                    color = AccentBlue,
-                    usage = currentStats.cpuUsage / 100f,
-                    scale = currentConfig.scale
+                    value = "${stats.cpuUsage.toInt()}%",
+                    subValue = if (stats.cpuFrequency > 0) "${stats.cpuFrequency} MHz" else null,
+                    color = theme.accentPrimary,
+                    usage = stats.cpuUsage / 100f,
+                    scale = config.scale
                 )
             }
 
-            if (currentConfig.showGpu) {
+            if (config.showGpu) {
                 StatRow(
                     icon = Icons.Rounded.Games,
                     label = "GPU",
-                    value = "${currentStats.gpuUsage.toInt()}%",
+                    value = "${stats.gpuUsage.toInt()}%",
                     subValue = null,
-                    color = AccentGreen,
-                    usage = currentStats.gpuUsage / 100f,
-                    scale = currentConfig.scale
+                    color = theme.accentSecondary,
+                    usage = stats.gpuUsage / 100f,
+                    scale = config.scale
                 )
             }
 
-            if (currentConfig.showRam) {
+            if (config.showRam) {
                 StatRow(
                     icon = Icons.Rounded.Storage,
                     label = "RAM",
-                    value = "${currentStats.ramUsed}MB",
-                    subValue = "/ ${currentStats.ramTotal}MB",
-                    color = GlassPurple,
-                    usage = currentStats.ramUsed.toFloat() / currentStats.ramTotal.coerceAtLeast(1),
-                    scale = currentConfig.scale
+                    value = "${stats.ramUsed}MB",
+                    subValue = "/ ${stats.ramTotal}MB",
+                    color = theme.accentInfo,
+                    usage = stats.ramUsed.toFloat() / stats.ramTotal.coerceAtLeast(1),
+                    scale = config.scale
                 )
             }
 
-            if (currentConfig.showTemp) {
-                TemperatureRow(currentStats, currentConfig.scale)
+            if (config.showTemp) {
+                TemperatureRow(stats, config.scale, theme)
             }
 
-            if (currentConfig.showNetwork) {
-                NetworkRow(currentStats, currentConfig.scale)
+            if (config.showNetwork) {
+                NetworkRow(stats, config.scale, theme)
+            }
+        }
+    }
+}
+
+// ─── Compact Mode ──────────────────────────────────────────────
+
+/**
+ * Compact overlay — single horizontal bar, minimal footprint.
+ * Shows FPS badge + condensed stat pills side by side.
+ */
+@Composable
+private fun CompactOverlayView(
+    stats: PerformanceStats,
+    config: OverlayConfig,
+    theme: OverlayTheme
+) {
+    GlassmorphismCard(
+        alpha = config.opacity,
+        blurEnabled = config.backgroundBlur,
+        glowColor = theme.cardGlow
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 8.dp * config.scale, vertical = 5.dp * config.scale),
+            horizontalArrangement = Arrangement.spacedBy(6.dp * config.scale),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // FPS badge
+            if (config.showFps) {
+                CompactFpsBadge(stats.fps, config.scale, theme)
+            }
+
+            // Stat pills
+            if (config.showCpu) {
+                CompactStatPill("CPU", "${stats.cpuUsage.toInt()}%", theme.accentPrimary, config.scale)
+            }
+            if (config.showGpu) {
+                CompactStatPill("GPU", "${stats.gpuUsage.toInt()}%", theme.accentSecondary, config.scale)
+            }
+            if (config.showRam) {
+                CompactStatPill("RAM", "${stats.ramUsed}MB", theme.accentInfo, config.scale)
+            }
+            if (config.showTemp) {
+                val tempStr = listOfNotNull(
+                    if (stats.cpuTemp > 0) "${stats.cpuTemp.toInt()}°" else null,
+                    if (stats.gpuTemp > 0) "${stats.gpuTemp.toInt()}°" else null,
+                ).joinToString("/")
+                if (tempStr.isNotEmpty()) {
+                    CompactStatPill("TMP", tempStr, theme.accentDanger, config.scale)
+                }
+            }
+            if (config.showNetwork) {
+                CompactStatPill("NET", "↓${StatsCollector.formatSpeed(stats.downloadSpeed)}", theme.accentInfo, config.scale)
             }
         }
     }
 }
 
 @Composable
-private fun OverlayHeader(fps: Int, showFps: Boolean, scale: Float) {
+private fun CompactFpsBadge(fps: Int, scale: Float, theme: OverlayTheme) {
+    val color = when {
+        fps >= 55 -> theme.accentSecondary
+        fps >= 30 -> theme.accentWarn
+        fps > 0 -> theme.accentDanger
+        else -> Color.White.copy(alpha = 0.3f)
+    }
+    val label = if (fps > 0) "$fps" else "—"
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(color.copy(alpha = 0.2f))
+            .padding(horizontal = 6.dp * scale, vertical = 2.dp * scale)
+    ) {
+        Text(
+            text = label,
+            fontSize = (12.sp * scale),
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            color = color
+        )
+    }
+}
+
+@Composable
+private fun CompactStatPill(label: String, value: String, color: Color, scale: Float) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp * scale)
+    ) {
+        Text(
+            text = label,
+            fontSize = (8.sp * scale),
+            color = color.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Medium
+        )
+        Text(
+            text = value,
+            fontSize = (10.sp * scale),
+            fontFamily = FontFamily.Monospace,
+            color = color,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+// ─── Shared Composables ────────────────────────────────────────
+
+@Composable
+private fun OverlayHeader(fps: Int, showFps: Boolean, scale: Float, theme: OverlayTheme) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -111,17 +233,17 @@ private fun OverlayHeader(fps: Int, showFps: Boolean, scale: Float) {
             letterSpacing = (2.sp * scale)
         )
         if (showFps) {
-            FpsBadge(fps, scale)
+            FpsBadge(fps, scale, theme)
         }
     }
 }
 
 @Composable
-private fun FpsBadge(fps: Int, scale: Float) {
+private fun FpsBadge(fps: Int, scale: Float, theme: OverlayTheme) {
     val color = when {
-        fps >= 55 -> AccentGreen
-        fps >= 30 -> AccentYellow
-        fps > 0 -> AccentRed
+        fps >= 55 -> theme.accentSecondary
+        fps >= 30 -> theme.accentWarn
+        fps > 0 -> theme.accentDanger
         else -> Color.White.copy(alpha = 0.3f)
     }
 
@@ -223,11 +345,11 @@ private fun UsageBar(usage: Float, color: Color, scale: Float) {
 }
 
 @Composable
-private fun TemperatureRow(stats: PerformanceStats, scale: Float) {
+private fun TemperatureRow(stats: PerformanceStats, scale: Float, theme: OverlayTheme) {
     val temps = listOfNotNull(
-        if (stats.cpuTemp > 0) "CPU ${stats.cpuTemp.toInt()}°" to AccentRed else null,
-        if (stats.gpuTemp > 0) "GPU ${stats.gpuTemp.toInt()}°" to AccentYellow else null,
-        if (stats.batteryTemp > 0) "BAT ${stats.batteryTemp.toInt()}°" to AccentBlue else null,
+        if (stats.cpuTemp > 0) "CPU ${stats.cpuTemp.toInt()}°" to theme.accentDanger else null,
+        if (stats.gpuTemp > 0) "GPU ${stats.gpuTemp.toInt()}°" to theme.accentWarn else null,
+        if (stats.batteryTemp > 0) "BAT ${stats.batteryTemp.toInt()}°" to theme.accentPrimary else null,
     )
 
     if (temps.isEmpty()) return
@@ -241,7 +363,7 @@ private fun TemperatureRow(stats: PerformanceStats, scale: Float) {
             imageVector = Icons.Rounded.Thermostat,
             contentDescription = "Temperature",
             modifier = Modifier.size((14.dp * scale)),
-            tint = AccentRed
+            tint = theme.accentDanger
         )
 
         Row(
@@ -261,7 +383,7 @@ private fun TemperatureRow(stats: PerformanceStats, scale: Float) {
 }
 
 @Composable
-private fun NetworkRow(stats: PerformanceStats, scale: Float) {
+private fun NetworkRow(stats: PerformanceStats, scale: Float, theme: OverlayTheme) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -271,7 +393,7 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float) {
             imageVector = Icons.Rounded.Wifi,
             contentDescription = "Network",
             modifier = Modifier.size((14.dp * scale)),
-            tint = GlassBlue
+            tint = theme.accentInfo
         )
 
         Row(
@@ -282,13 +404,13 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float) {
                 text = "↓ ${StatsCollector.formatSpeed(stats.downloadSpeed)}",
                 fontSize = (10.sp * scale),
                 fontFamily = FontFamily.Monospace,
-                color = AccentGreen
+                color = theme.accentSecondary
             )
             Text(
                 text = "↑ ${StatsCollector.formatSpeed(stats.uploadSpeed)}",
                 fontSize = (10.sp * scale),
                 fontFamily = FontFamily.Monospace,
-                color = AccentBlue
+                color = theme.accentPrimary
             )
         }
     }
@@ -307,6 +429,7 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float) {
 fun GlassmorphismCard(
     alpha: Float = 0.85f,
     blurEnabled: Boolean = true,
+    glowColor: Color = Color.White.copy(alpha = 0.08f),
     content: @Composable BoxScope.() -> Unit
 ) {
     val blurRadius = if (blurEnabled) (12f * alpha).coerceIn(4f, 20f) else 0f
@@ -332,8 +455,8 @@ fun GlassmorphismCard(
                         Color.White.copy(alpha = alpha * 0.28f),
                         Color.White.copy(alpha = alpha * 0.10f)
                     ),
-                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                    end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                 )
             )
             .drawBehind {
@@ -341,13 +464,13 @@ fun GlassmorphismCard(
                 drawLine(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.35f * alpha),
-                            Color.White.copy(alpha = 0.15f * alpha),
-                            Color.White.copy(alpha = 0.35f * alpha)
+                            glowColor.copy(alpha = glowColor.alpha * alpha * 2f),
+                            glowColor.copy(alpha = glowColor.alpha * alpha),
+                            glowColor.copy(alpha = glowColor.alpha * alpha * 2f)
                         )
                     ),
-                    start = androidx.compose.ui.geometry.Offset(0f, 0.5f),
-                    end = androidx.compose.ui.geometry.Offset(size.width, 0.5f),
+                    start = Offset(0f, 0.5f),
+                    end = Offset(size.width, 0.5f),
                     strokeWidth = 1f
                 )
             },

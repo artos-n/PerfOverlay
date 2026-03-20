@@ -27,7 +27,9 @@ data class OverlayConfig(
     val showRam: Boolean = false,
     val refreshIntervalMs: Long = 1000L,
     val scale: Float = 1.0f,
-    val backgroundBlur: Boolean = true
+    val backgroundBlur: Boolean = true,
+    val themeName: String = "OCEAN",
+    val compactMode: Boolean = false
 )
 
 enum class OverlayPosition {

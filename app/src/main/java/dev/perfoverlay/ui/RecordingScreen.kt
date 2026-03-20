@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import dev.perfoverlay.data.*
 import dev.perfoverlay.ui.component.*
 import dev.perfoverlay.ui.theme.*
+import dev.perfoverlay.util.ExportManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -291,7 +292,10 @@ private fun SessionDetailView(
     recordingManager: RecordingManager,
     onBack: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val samples by recordingManager.getSamplesForSession(sessionId).collectAsState(initial = emptyList())
+    val scope = rememberCoroutineScope()
+    var exportMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -299,15 +303,16 @@ private fun SessionDetailView(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Back button + title
+        // Back button + title + export
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             IconButton(onClick = onBack) {
                 Icon(Icons.Rounded.ArrowBack, contentDescription = "Back", tint = Color.White)
             }
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "Session Detail",
                     fontSize = 20.sp,
@@ -321,6 +326,51 @@ private fun SessionDetailView(
                         color = Color.White.copy(alpha = 0.5f)
                     )
                 }
+            }
+            // Export buttons
+            if (samples.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                val sessionName = "Session_$sessionId"
+                                val result = ExportManager.exportCsv(context, sessionName, samples)
+                                exportMessage = if (result != null) "CSV exported ✓" else "Export failed"
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Rounded.Description, contentDescription = "Export CSV", tint = AccentGreen, modifier = Modifier.size(20.dp))
+                    }
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                val sessionName = "Session_$sessionId"
+                                val result = ExportManager.exportJson(context, sessionName, samples)
+                                exportMessage = if (result != null) "JSON exported ✓" else "Export failed"
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Rounded.Code, contentDescription = "Export JSON", tint = AccentBlue, modifier = Modifier.size(20.dp))
+                    }
+                }
+            }
+        }
+
+        // Export toast
+        exportMessage?.let { msg ->
+            LaunchedEffect(msg) {
+                kotlinx.coroutines.delay(2000)
+                exportMessage = null
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (msg.contains("✓")) AccentGreen.copy(alpha = 0.15f) else AccentRed.copy(alpha = 0.15f))
+                    .padding(10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(msg, color = Color.White, fontSize = 13.sp)
             }
         }
 

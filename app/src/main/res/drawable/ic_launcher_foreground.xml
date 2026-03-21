@@ -4,29 +4,54 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Background circle -->
+    <!-- Outer ring -->
     <path
-        android:fillColor="#000000"
-        android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0" />
-    <!-- Gradient accent bar -->
+        android:strokeColor="#4A9EFF"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:pathData="M54,20 A34,34 0 1,1 53.99,20"
+        android:strokeAlpha="0.6"/>
+    <!-- Speed arc - bottom-left to upper-right sweep -->
     <path
-        android:fillColor="#4A9EFF"
-        android:pathData="M28,68 L28,42 L34,42 L34,68 Z" />
-    <path
-        android:fillColor="#4AE68C"
-        android:pathData="M38,68 L38,32 L44,32 L44,68 Z" />
-    <path
-        android:fillColor="#4A9EFF"
-        android:pathData="M48,68 L48,48 L54,48 L54,68 Z" />
-    <path
-        android:fillColor="#A855F7"
-        android:pathData="M58,68 L58,36 L64,36 L64,68 Z" />
-    <path
-        android:fillColor="#4AE68C"
-        android:pathData="M68,68 L68,28 L74,28 L74,68 Z" />
-    <!-- Base line -->
+        android:strokeColor="#4AE68C"
+        android:strokeWidth="4"
+        android:fillColor="#00000000"
+        android:pathData="M54,20 A34,34 0 0,1 84,67"
+        android:strokeLineCap="round"/>
+    <!-- Needle -->
     <path
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2"
-        android:pathData="M24,70 L78,70" />
+        android:strokeWidth="2.5"
+        android:pathData="M54,54 L76,32"
+        android:strokeLineCap="round"/>
+    <!-- Center dot -->
+    <path
+        android:fillColor="#4A9EFF"
+        android:pathData="M54,54 m-4,0 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0"/>
+    <!-- FPS text area (tick marks) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M30,68 L30,64"
+        android:strokeAlpha="0.3"/>
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M42,42 L42,38"
+        android:strokeAlpha="0.3"/>
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M54,36 L54,32"
+        android:strokeAlpha="0.3"/>
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M66,42 L66,38"
+        android:strokeAlpha="0.3"/>
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M78,68 L78,64"
+        android:strokeAlpha="0.3"/>
 </vector>

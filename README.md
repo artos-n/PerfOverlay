@@ -114,11 +114,14 @@ Requires Android Studio Hedgehog+ and JDK 17.
 - [x] Session diff / comparison with delta visualization
 - [x] Quick Settings tile with live FPS
 - [x] Stress test mode with thermal ceiling detection
-- [ ] Widget support
-- [ ] CPU governor tracking
-- [ ] Quick Settings tile
-- [ ] Stress test mode
-- [ ] Widget support
+- [x] Widget support
+- [x] CPU governor tracking
+- [x] Quick Settings tile
+- [x] Stress test mode
+- [x] Battery stats (level, charge rate, charging status)
+- [x] Per-core CPU usage display
+- [x] GPU frequency reading
+- [x] Governor color-bands on performance graphs
 
 ## Inspired By
 

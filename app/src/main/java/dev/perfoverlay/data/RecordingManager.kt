@@ -98,6 +98,7 @@ class RecordingManager(private val context: Context) {
                         droppedFrames = stats.droppedFrames,
                         cpuUsage = stats.cpuUsage,
                         cpuFrequency = stats.cpuFrequency,
+                        cpuGovernor = stats.cpuGovernor,
                         gpuUsage = stats.gpuUsage,
                         cpuTemp = stats.cpuTemp,
                         gpuTemp = stats.gpuTemp,

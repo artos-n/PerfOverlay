@@ -33,6 +33,7 @@ fun PerformanceGraph(
     label: String,
     unit: String = "",
     lineColor: Color = AccentBlue,
+    governorExtractor: ((StatSample) -> String)? = null,
     modifier: Modifier = Modifier
 ) {
     if (samples.isEmpty()) return
@@ -95,6 +96,28 @@ fun PerformanceGraph(
             val width = size.width
             val height = size.height
             val stepX = width / (values.size - 1).coerceAtLeast(1)
+
+            // Governor color bands (drawn before grid and line)
+            if (governorExtractor != null) {
+                var bandStart = 0
+                var currentGovernor = governorExtractor(samples[0])
+                for (i in 1 until samples.size) {
+                    val gov = governorExtractor(samples[i])
+                    if (gov != currentGovernor || i == samples.size - 1) {
+                        val endIdx = if (gov != currentGovernor) i else i + 1
+                        val bandColor = governorColor(currentGovernor)
+                        if (bandColor != Color.Transparent) {
+                            drawRect(
+                                color = bandColor,
+                                topLeft = Offset(bandStart * stepX, 0f),
+                                size = androidx.compose.ui.geometry.Size((endIdx - bandStart) * stepX, height)
+                            )
+                        }
+                        bandStart = i
+                        currentGovernor = gov
+                    }
+                }
+            }
 
             // Draw grid lines
             drawGrid(height, maxValue)
@@ -328,4 +351,16 @@ private fun formatDuration(millis: Long): String {
     val seconds = totalSeconds % 60
     return if (minutes > 0) "${minutes}m${seconds.toString().padStart(2, '0')}s"
     else "${seconds}s"
+}
+
+private fun governorColor(governor: String): Color {
+    return when (governor) {
+        "schedutil" -> Color(0xFF4AE68C).copy(alpha = 0.08f)
+        "performance" -> Color(0xFF4A9EFF).copy(alpha = 0.08f)
+        "powersave" -> Color(0xFFA855F7).copy(alpha = 0.08f)
+        "interactive" -> Color(0xFFF97316).copy(alpha = 0.08f)
+        "ondemand" -> Color(0xFFFFD93D).copy(alpha = 0.08f)
+        "conservative" -> Color(0xFF10B981).copy(alpha = 0.08f)
+        else -> Color.Transparent
+    }
 }

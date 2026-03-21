@@ -28,21 +28,21 @@
 ## 🔨 Remaining
 
 ### Novel Features
-- [ ] **Governor on graphs** — color-band graph background by active governor mode (schedutil/performance/powersave)
+- [x] ~~Governor on graphs~~ — color-band graph background by active governor mode (schedutil=green, performance=blue, powersave=purple)
 
 ### Low Priority
 - [ ] **Full Shizuku overlay** — create overlay windows directly via Shizuku (bypass SYSTEM_ALERT_WINDOW entirely)
 - [ ] **Widget** — home screen widget showing current FPS/CPU
-- [ ] **Battery stats** — battery level, charge rate, estimated time remaining
-- [ ] **Per-core CPU** — show individual core usage (not just aggregate)
-- [ ] **GPU frequency** — read GPU clock speed in addition to usage %
+- [x] ~~Battery stats~~ — battery level, charge rate, estimated time remaining
+- [x] ~~Per-core CPU~~ — show individual core usage (not just aggregate)
+- [x] ~~GPU frequency~~ — read GPU clock speed in addition to usage %
 - [ ] **Storage I/O** — read/write speed monitoring
 - [ ] **Localization** — support multiple languages
 
 ### Polish
-- [ ] **App icon** — proper high-res icon (512x512 Play Store, adaptive icon assets)
+- [x] ~~App icon~~ — proper high-res icon (512x512 Play Store, adaptive icon assets)
 - [ ] **Screenshot assets** — Play Store listing screenshots
-- [ ] **CI/CD** — GitHub Actions workflow for APK builds
+- [x] ~~CI/CD~~ — GitHub Actions workflow for APK builds
 - [ ] **Release signing** — configure release build signing
 - [ ] **ProGuard rules** — test minified release builds
-- [ ] **Changelog** — maintain CHANGELOG.md per release
+- [x] ~~Changelog~~ — maintain CHANGELOG.md per release

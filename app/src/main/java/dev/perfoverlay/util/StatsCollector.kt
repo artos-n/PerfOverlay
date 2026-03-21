@@ -3,6 +3,7 @@ package dev.perfoverlay.util
 import android.app.ActivityManager
 import android.content.Context
 import android.net.TrafficStats
+import android.os.BatteryManager
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -15,6 +16,10 @@ object StatsCollector {
     private var lastTimestamp = 0L
     private var prevIdle = 0L
     private var prevTotal = 0L
+    private var prevCoreIdle = LongArray(8)
+    private var prevCoreTotal = LongArray(8)
+
+    data class BatteryInfo(val level: Int, val isCharging: Boolean, val chargeRate: Float)
 
     /**
      * Reads the current CPU frequency governor.
@@ -94,9 +99,16 @@ object StatsCollector {
 
         // GPU
         val gpuUsage = getGpuUsage()
+        val gpuFreq = getGpuFrequency()
 
         // Temperatures
         val temps = getTemperatures()
+
+        // Battery
+        val battery = getBatteryInfo(context)
+
+        // Per-core CPU
+        val perCore = getPerCoreUsage()
 
         return dev.perfoverlay.data.PerformanceStats(
             cpuUsage = cpuUsage,
@@ -105,10 +117,15 @@ object StatsCollector {
             cpuMaxFreq = cpuMaxFreq,
             cpuMinFreq = cpuMinFreq,
             gpuUsage = gpuUsage,
+            gpuFrequency = gpuFreq,
             cpuTemp = temps.getOrElse(0) { 0f },
             gpuTemp = temps.getOrElse(1) { 0f },
             batteryTemp = temps.getOrElse(2) { 0f },
             deviceTemp = temps.getOrElse(3) { 0f },
+            batteryLevel = battery.level,
+            isCharging = battery.isCharging,
+            chargeRate = battery.chargeRate,
+            perCoreUsage = perCore,
             ramUsed = ramUsed,
             ramTotal = ramTotal,
             downloadSpeed = dlSpeed.coerceAtLeast(0),
@@ -254,6 +271,86 @@ object StatsCollector {
         }
         while (temps.size < 4) temps.add(0f)
         return temps
+    }
+
+    fun getPerCoreUsage(): FloatArray {
+        val cores = FloatArray(8)
+        try {
+            val reader = BufferedReader(FileReader("/proc/stat"))
+            val lines = reader.readLines()
+            reader.close()
+
+            for (i in 0 until 8) {
+                val line = lines.firstOrNull { it.startsWith("cpu$i ") } ?: continue
+                val parts = line.split("\\s+".toRegex())
+                val user = parts[1].toLong()
+                val nice = parts[2].toLong()
+                val system = parts[3].toLong()
+                val idle = parts[4].toLong()
+                val iowait = parts.getOrNull(5)?.toLongOrNull() ?: 0L
+                val irq = parts.getOrNull(6)?.toLongOrNull() ?: 0L
+                val softirq = parts.getOrNull(7)?.toLongOrNull() ?: 0L
+
+                val total = user + nice + system + idle + iowait + irq + softirq
+                val idleTotal = idle + iowait
+
+                if (prevCoreTotal[i] > 0) {
+                    val totalDelta = total - prevCoreTotal[i]
+                    val idleDelta = idleTotal - prevCoreIdle[i]
+                    cores[i] = if (totalDelta > 0) ((totalDelta - idleDelta).toFloat() / totalDelta * 100f).coerceIn(0f, 100f) else 0f
+                }
+                prevCoreTotal[i] = total
+                prevCoreIdle[i] = idleTotal
+            }
+        } catch (_: Exception) {}
+        return cores
+    }
+
+    fun getGpuFrequency(): Long {
+        // Adreno
+        try {
+            val file = File("/sys/class/kgsl/kgsl-3d0/gpuclk")
+            if (file.exists()) {
+                val reader = BufferedReader(FileReader(file))
+                val freq = reader.readLine().trim().toLongOrNull()?.div(1_000_000) ?: 0L
+                reader.close()
+                return freq
+            }
+        } catch (_: Exception) {}
+
+        // Mali / devfreq
+        try {
+            val devfreqDir = File("/sys/class/devfreq/")
+            if (devfreqDir.exists()) {
+                devfreqDir.listFiles()?.forEach { dir ->
+                    val name = dir.name.lowercase()
+                    if (name.contains("gpu") || name.contains("mali") || name.contains("kgsl")) {
+                        val curFile = File(dir, "cur_freq")
+                        if (curFile.exists()) {
+                            val reader = BufferedReader(FileReader(curFile))
+                            val freq = reader.readLine().trim().toLongOrNull()?.div(1_000_000) ?: 0L
+                            reader.close()
+                            if (freq > 0) return freq
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        return 0L
+    }
+
+    fun getBatteryInfo(context: Context): BatteryInfo {
+        return try {
+            val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+            val level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            val chargeRate = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000f
+            val status = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS)
+            val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL
+            BatteryInfo(level, isCharging, chargeRate)
+        } catch (_: Exception) {
+            BatteryInfo(0, false, 0f)
+        }
     }
 
     fun formatSpeed(bytesPerSec: Long): String {

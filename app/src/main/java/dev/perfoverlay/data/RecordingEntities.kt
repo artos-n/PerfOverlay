@@ -78,6 +78,7 @@ data class StatSample(
     val droppedFrames: Int = 0,
     val cpuUsage: Float = 0f,
     val cpuFrequency: Long = 0L,
+    val cpuGovernor: String = "",
     val gpuUsage: Float = 0f,
     val cpuTemp: Float = 0f,
     val gpuTemp: Float = 0f,

@@ -16,10 +16,16 @@ data class PerformanceStats(
     val cpuMaxFreq: Long = 0L,
     val cpuMinFreq: Long = 0L,
     val gpuUsage: Float = 0f,
+    val gpuFrequency: Long = 0L,
     val cpuTemp: Float = 0f,
     val gpuTemp: Float = 0f,
     val batteryTemp: Float = 0f,
     val deviceTemp: Float = 0f,
+    val batteryLevel: Int = 0,
+    val isCharging: Boolean = false,
+    val chargeRate: Float = 0f,
+    val batteryHealth: Int = 0,
+    val perCoreUsage: FloatArray = FloatArray(0),
     val ramUsed: Long = 0L,
     val ramTotal: Long = 0L,
     val downloadSpeed: Long = 0L,
@@ -44,10 +50,16 @@ data class PerformanceStats(
             cpuMaxFreq == other.cpuMaxFreq &&
             cpuMinFreq == other.cpuMinFreq &&
             gpuUsage == other.gpuUsage &&
+            gpuFrequency == other.gpuFrequency &&
             cpuTemp == other.cpuTemp &&
             gpuTemp == other.gpuTemp &&
             batteryTemp == other.batteryTemp &&
             deviceTemp == other.deviceTemp &&
+            batteryLevel == other.batteryLevel &&
+            isCharging == other.isCharging &&
+            chargeRate == other.chargeRate &&
+            batteryHealth == other.batteryHealth &&
+            perCoreUsage.contentEquals(other.perCoreUsage) &&
             ramUsed == other.ramUsed &&
             ramTotal == other.ramTotal &&
             downloadSpeed == other.downloadSpeed &&
@@ -71,10 +83,16 @@ data class PerformanceStats(
         result = 31 * result + cpuMaxFreq.hashCode()
         result = 31 * result + cpuMinFreq.hashCode()
         result = 31 * result + gpuUsage.hashCode()
+        result = 31 * result + gpuFrequency.hashCode()
         result = 31 * result + cpuTemp.hashCode()
         result = 31 * result + gpuTemp.hashCode()
         result = 31 * result + batteryTemp.hashCode()
         result = 31 * result + deviceTemp.hashCode()
+        result = 31 * result + batteryLevel
+        result = 31 * result + isCharging.hashCode()
+        result = 31 * result + chargeRate.hashCode()
+        result = 31 * result + batteryHealth
+        result = 31 * result + perCoreUsage.contentHashCode()
         result = 31 * result + ramUsed.hashCode()
         result = 31 * result + ramTotal.hashCode()
         result = 31 * result + downloadSpeed.hashCode()
@@ -96,6 +114,7 @@ data class OverlayConfig(
     val showTemp: Boolean = true,
     val showNetwork: Boolean = true,
     val showRam: Boolean = false,
+    val showBattery: Boolean = false,
     val refreshIntervalMs: Long = 1000L,
     val scale: Float = 1.0f,
     val backgroundBlur: Boolean = true,

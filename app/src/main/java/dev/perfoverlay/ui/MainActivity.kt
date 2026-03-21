@@ -302,7 +302,10 @@ class MainActivity : ComponentActivity() {
                     LiveStatRow("FRAME", ftStr, if (stats.p95FrameTimeMs > 33f) AccentRed else AccentGreen)
                 }
                 if (config.showCpu) LiveStatRow("CPU", "${stats.cpuUsage.toInt()}% @ ${stats.cpuFrequency} MHz", AccentBlue)
-                if (config.showGpu) LiveStatRow("GPU", "${stats.gpuUsage.toInt()}%", AccentGreen)
+                if (config.showGpu) {
+                    val gpuSub = if (stats.gpuFrequency > 0) " @ ${stats.gpuFrequency} MHz" else ""
+                    LiveStatRow("GPU", "${stats.gpuUsage.toInt()}%$gpuSub", AccentGreen)
+                }
                 if (config.showRam) LiveStatRow("RAM", "${stats.ramUsed} / ${stats.ramTotal} MB", GlassPurple)
                 if (config.showTemp) {
                     val temps = listOfNotNull(
@@ -314,6 +317,11 @@ class MainActivity : ComponentActivity() {
                 }
                 if (config.showNetwork) {
                     LiveStatRow("NET", "↓ ${StatsCollector.formatSpeed(stats.downloadSpeed)}  ↑ ${StatsCollector.formatSpeed(stats.uploadSpeed)}", GlassBlue)
+                }
+                if (config.showBattery) {
+                    val chargeStr = if (stats.isCharging) "⚡ ${stats.batteryLevel}%" else "${stats.batteryLevel}%"
+                    val rateStr = if (stats.chargeRate != 0f) " (${if (stats.chargeRate > 0) "+" else ""}${stats.chargeRate.toInt()}mA)" else ""
+                    LiveStatRow("BAT", "$chargeStr$rateStr", if (stats.isCharging) AccentGreen else GlassPurple)
                 }
             }
         }
@@ -339,6 +347,7 @@ class MainActivity : ComponentActivity() {
                 StatToggle("RAM", Icons.Rounded.Storage, config.showRam) { updateConfig(config.copy(showRam = it)) }
                 StatToggle("Temperature", Icons.Rounded.Thermostat, config.showTemp) { updateConfig(config.copy(showTemp = it)) }
                 StatToggle("Network", Icons.Rounded.Wifi, config.showNetwork) { updateConfig(config.copy(showNetwork = it)) }
+                StatToggle("Battery", Icons.Rounded.BatteryFull, config.showBattery) { updateConfig(config.copy(showBattery = it)) }
             }
         }
     }

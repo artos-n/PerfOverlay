@@ -93,14 +93,20 @@ private fun FullOverlayView(
                     usage = stats.cpuUsage / 100f,
                     scale = config.scale
                 )
+                // Per-core CPU bars
+                val activeCores = stats.perCoreUsage.filter { it > 0f }
+                if (activeCores.isNotEmpty()) {
+                    PerCoreUsageBars(activeCores, config.scale, theme)
+                }
             }
 
             if (config.showGpu) {
+                val gpuSub = if (stats.gpuFrequency > 0) "@ ${stats.gpuFrequency} MHz" else null
                 StatRow(
                     icon = Icons.Rounded.Games,
                     label = "GPU",
                     value = "${stats.gpuUsage.toInt()}%",
-                    subValue = null,
+                    subValue = gpuSub,
                     color = theme.accentSecondary,
                     usage = stats.gpuUsage / 100f,
                     scale = config.scale
@@ -117,6 +123,10 @@ private fun FullOverlayView(
                     usage = stats.ramUsed.toFloat() / stats.ramTotal.coerceAtLeast(1),
                     scale = config.scale
                 )
+            }
+
+            if (config.showBattery) {
+                BatteryRow(stats, config.scale, theme)
             }
 
             if (config.showTemp) {
@@ -194,6 +204,10 @@ private fun CompactOverlayView(
             }
             if (config.showNetwork) {
                 CompactStatPill("NET", "↓${StatsCollector.formatSpeed(stats.downloadSpeed)}", theme.accentInfo, config.scale)
+            }
+            if (config.showBattery) {
+                val chargeIcon = if (stats.isCharging) "⚡" else ""
+                CompactStatPill("BAT", "${stats.batteryLevel}%$chargeIcon", theme.accentInfo, config.scale)
             }
         }
     }
@@ -443,6 +457,101 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float, theme: OverlayThem
                 fontFamily = FontFamily.Monospace,
                 color = theme.accentPrimary
             )
+        }
+    }
+}
+
+@Composable
+private fun BatteryRow(stats: PerformanceStats, scale: Float, theme: OverlayTheme) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp * scale)
+    ) {
+        Icon(
+            imageVector = if (stats.isCharging) Icons.Rounded.Bolt else Icons.Rounded.BatteryFull,
+            contentDescription = "Battery",
+            modifier = Modifier.size((14.dp * scale)),
+            tint = if (stats.isCharging) theme.accentSecondary else theme.accentInfo
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "BAT",
+                    fontSize = (11.sp * scale),
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp * scale)) {
+                    Text(
+                        text = "${stats.batteryLevel}%",
+                        fontSize = (11.sp * scale),
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.Monospace,
+                        color = Color.White
+                    )
+                    if (stats.isCharging && stats.chargeRate != 0f) {
+                        Text(
+                            text = "${if (stats.chargeRate > 0) "+" else ""}${stats.chargeRate.toInt()}mA",
+                            fontSize = (9.sp * scale),
+                            color = if (stats.chargeRate > 0) theme.accentSecondary else theme.accentDanger,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(3.dp * scale))
+            UsageBar(stats.batteryLevel / 100f, if (stats.isCharging) theme.accentSecondary else theme.accentInfo, scale)
+        }
+    }
+}
+
+@Composable
+private fun PerCoreUsageBars(cores: List<Float>, scale: Float, theme: OverlayTheme) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = (22.dp * scale)), // align with stat row content
+        horizontalArrangement = Arrangement.spacedBy(3.dp * scale)
+    ) {
+        cores.forEachIndexed { index, usage ->
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height((16.dp * scale))
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color.White.copy(alpha = 0.06f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight((usage / 100f).coerceIn(0f, 1f))
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        theme.accentPrimary,
+                                        theme.accentPrimary.copy(alpha = 0.5f)
+                                    )
+                                )
+                            )
+                            .align(Alignment.BottomCenter)
+                    )
+                }
+                Text(
+                    text = "C$index",
+                    fontSize = (6.sp * scale),
+                    color = Color.White.copy(alpha = 0.3f),
+                    modifier = Modifier.padding(top = 1.dp)
+                )
+            }
         }
     }
 }

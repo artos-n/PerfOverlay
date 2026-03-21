@@ -438,14 +438,28 @@ private fun SessionDetailView(
                 )
             }
 
-            // CPU + GPU overlay
+            // CPU with governor bands
             item {
-                MultiMetricGraph(
+                PerformanceGraph(
                     samples = samples,
-                    series = listOf(
-                        GraphSeries("CPU", AccentBlue) { it.cpuUsage },
-                        GraphSeries("GPU", AccentYellow) { it.gpuUsage }
-                    )
+                    valueExtractor = { it.cpuUsage },
+                    maxValue = 100f,
+                    label = "CPU",
+                    unit = "%",
+                    lineColor = AccentBlue,
+                    governorExtractor = { it.cpuGovernor }
+                )
+            }
+
+            // GPU
+            item {
+                PerformanceGraph(
+                    samples = samples,
+                    valueExtractor = { it.gpuUsage },
+                    maxValue = 100f,
+                    label = "GPU",
+                    unit = "%",
+                    lineColor = AccentYellow
                 )
             }
 

@@ -30,6 +30,8 @@ data class PerformanceStats(
     val ramTotal: Long = 0L,
     val downloadSpeed: Long = 0L,
     val uploadSpeed: Long = 0L,
+    val storageReadSpeed: Long = 0L,
+    val storageWriteSpeed: Long = 0L,
     val throttleState: ThrottleState = ThrottleState(),
     val anomalyCount: Int = 0,
     val timestamp: Long = System.currentTimeMillis()
@@ -64,6 +66,8 @@ data class PerformanceStats(
             ramTotal == other.ramTotal &&
             downloadSpeed == other.downloadSpeed &&
             uploadSpeed == other.uploadSpeed &&
+            storageReadSpeed == other.storageReadSpeed &&
+            storageWriteSpeed == other.storageWriteSpeed &&
             throttleState == other.throttleState &&
             anomalyCount == other.anomalyCount &&
             timestamp == other.timestamp
@@ -97,6 +101,8 @@ data class PerformanceStats(
         result = 31 * result + ramTotal.hashCode()
         result = 31 * result + downloadSpeed.hashCode()
         result = 31 * result + uploadSpeed.hashCode()
+        result = 31 * result + storageReadSpeed.hashCode()
+        result = 31 * result + storageWriteSpeed.hashCode()
         result = 31 * result + throttleState.hashCode()
         result = 31 * result + anomalyCount
         result = 31 * result + timestamp.hashCode()
@@ -115,6 +121,7 @@ data class OverlayConfig(
     val showNetwork: Boolean = true,
     val showRam: Boolean = false,
     val showBattery: Boolean = false,
+    val showStorage: Boolean = false,
     val refreshIntervalMs: Long = 1000L,
     val scale: Float = 1.0f,
     val backgroundBlur: Boolean = true,

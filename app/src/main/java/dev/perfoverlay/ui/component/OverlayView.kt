@@ -137,6 +137,10 @@ private fun FullOverlayView(
                 NetworkRow(stats, config.scale, theme)
             }
 
+            if (config.showStorage) {
+                StorageRow(stats, config.scale, theme)
+            }
+
             // Throttle warning
             if (stats.throttleState.isThrottling) {
                 ThrottleWarningRow(stats.throttleState, config.scale, theme)
@@ -145,6 +149,11 @@ private fun FullOverlayView(
             // Anomaly count
             if (stats.anomalyCount > 0) {
                 AnomalyCountRow(stats.anomalyCount, config.scale, theme)
+            }
+
+            // Storage I/O
+            if (config.showStorage) {
+                StorageRow(stats, config.scale, theme)
             }
         }
     }
@@ -760,6 +769,75 @@ private fun AnomalyCountRow(
             fontFamily = FontFamily.Monospace,
             color = theme.accentWarn.copy(alpha = 0.6f)
         )
+    }
+}
+
+@Composable
+private fun StorageRow(stats: PerformanceStats, scale: Float, theme: OverlayTheme) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp * scale)
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Storage,
+            contentDescription = "Storage I/O",
+            modifier = Modifier.size((14.dp * scale)),
+            tint = theme.accentInfo
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "STORAGE",
+                    fontSize = (11.sp * scale),
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp * scale)) {
+                    Text(
+                        text = "↓ ${StatsCollector.formatStorageSpeed(stats.storageReadSpeed)}",
+                        fontSize = (10.sp * scale),
+                        fontFamily = FontFamily.Monospace,
+                        color = theme.accentSecondary
+                    )
+                    Text(
+                        text = "↑ ${StatsCollector.formatStorageSpeed(stats.storageWriteSpeed)}",
+                        fontSize = (10.sp * scale),
+                        fontFamily = FontFamily.Monospace,
+                        color = theme.accentPrimary
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(3.dp * scale))
+            // Combined I/O bar
+            val totalIO = (stats.storageReadSpeed + stats.storageWriteSpeed).coerceAtLeast(1)
+            val readFraction = stats.storageReadSpeed.toFloat() / totalIO
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height((4.dp * scale))
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color.White.copy(alpha = 0.1f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(readFraction.coerceIn(0f, 1f))
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(theme.accentSecondary.copy(alpha = 0.7f))
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(stats.storageWriteSpeed.toFloat() / totalIO.coerceAtLeast(1))
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(theme.accentPrimary.copy(alpha = 0.7f))
+                )
+            }
+        }
     }
 }
 

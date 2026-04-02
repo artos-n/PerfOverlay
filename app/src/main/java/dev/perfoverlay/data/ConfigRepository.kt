@@ -22,6 +22,7 @@ class ConfigRepository(private val context: Context) {
         private val SHOW_NETWORK = booleanPreferencesKey("show_network")
         private val SHOW_RAM = booleanPreferencesKey("show_ram")
         private val SHOW_BATTERY = booleanPreferencesKey("show_battery")
+        private val SHOW_STORAGE = booleanPreferencesKey("show_storage")
         private val REFRESH_INTERVAL = longPreferencesKey("refresh_interval")
         private val SCALE = floatPreferencesKey("scale")
         private val BACKGROUND_BLUR = booleanPreferencesKey("background_blur")
@@ -42,6 +43,7 @@ class ConfigRepository(private val context: Context) {
             showNetwork = prefs[SHOW_NETWORK] ?: true,
             showRam = prefs[SHOW_RAM] ?: false,
             showBattery = prefs[SHOW_BATTERY] ?: false,
+            showStorage = prefs[SHOW_STORAGE] ?: false,
             refreshIntervalMs = prefs[REFRESH_INTERVAL] ?: 1000L,
             scale = prefs[SCALE] ?: 1.0f,
             backgroundBlur = prefs[BACKGROUND_BLUR] ?: true,
@@ -62,6 +64,7 @@ class ConfigRepository(private val context: Context) {
             prefs[SHOW_NETWORK] = config.showNetwork
             prefs[SHOW_RAM] = config.showRam
             prefs[SHOW_BATTERY] = config.showBattery
+            prefs[SHOW_STORAGE] = config.showStorage
             prefs[REFRESH_INTERVAL] = config.refreshIntervalMs
             prefs[SCALE] = config.scale
             prefs[BACKGROUND_BLUR] = config.backgroundBlur

@@ -18,6 +18,9 @@ object StatsCollector {
     private var prevTotal = 0L
     private var prevCoreIdle = LongArray(8)
     private var prevCoreTotal = LongArray(8)
+    private var prevReadSectors = 0L
+    private var prevWriteSectors = 0L
+    private var prevStorageTimestamp = 0L
 
     data class BatteryInfo(val level: Int, val isCharging: Boolean, val chargeRate: Float)
 
@@ -110,6 +113,9 @@ object StatsCollector {
         // Per-core CPU
         val perCore = getPerCoreUsage()
 
+        // Storage I/O
+        val (storageReadSpeed, storageWriteSpeed) = getStorageIO()
+
         return dev.perfoverlay.data.PerformanceStats(
             cpuUsage = cpuUsage,
             cpuFrequency = cpuFreq,
@@ -130,6 +136,8 @@ object StatsCollector {
             ramTotal = ramTotal,
             downloadSpeed = dlSpeed.coerceAtLeast(0),
             uploadSpeed = ulSpeed.coerceAtLeast(0),
+            storageReadSpeed = storageReadSpeed,
+            storageWriteSpeed = storageWriteSpeed,
             timestamp = now
         )
     }
@@ -359,5 +367,45 @@ object StatsCollector {
             bytesPerSec >= 1024 -> "${(bytesPerSec / 1024f * 10).roundToInt() / 10f} KB/s"
             else -> "$bytesPerSec B/s"
         }
+    }
+
+    fun getStorageIO(): Pair<Long, Long> {
+        val now = System.currentTimeMillis()
+        val elapsed = if (prevStorageTimestamp > 0) (now - prevStorageTimestamp) / 1000f else 1f
+        prevStorageTimestamp = now
+
+        try {
+            val reader = BufferedReader(FileReader("/proc/diskstats"))
+            val lines = reader.readLines()
+            reader.close()
+
+            // Find first eligible block device (skip loop, ram, mtd)
+            var totalReadSectors = 0L
+            var totalWriteSectors = 0L
+            for (line in lines) {
+                val parts = line.trim().split("\\s+".toRegex())
+                if (parts.size < 14) continue
+                val deviceName = parts[2]
+                // Skip loop, ram, mtd devices
+                if (deviceName.startsWith("loop") || deviceName.startsWith("ram") || deviceName.startsWith("mtd")) continue
+                // Read sectors (field 5 for reads, field 9 for writes in diskstats)
+                val reads = parts[5].toLongOrNull() ?: 0L
+                val writes = parts[9].toLongOrNull() ?: 0L
+                totalReadSectors += reads
+                totalWriteSectors += writes
+            }
+
+            if (prevReadSectors > 0 && prevWriteSectors > 0) {
+                val readSpeed = if (elapsed > 0) ((totalReadSectors - prevReadSectors) / elapsed * 512).toLong() else 0L
+                val writeSpeed = if (elapsed > 0) ((totalWriteSectors - prevWriteSectors) / elapsed * 512).toLong() else 0L
+                prevReadSectors = totalReadSectors
+                prevWriteSectors = totalWriteSectors
+                return Pair(readSpeed.coerceAtLeast(0), writeSpeed.coerceAtLeast(0))
+            }
+            prevReadSectors = totalReadSectors
+            prevWriteSectors = totalWriteSectors
+        } catch (_: Exception) {}
+
+        return Pair(0L, 0L)
     }
 }

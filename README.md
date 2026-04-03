@@ -111,17 +111,17 @@ Requires Android Studio Hedgehog+ and JDK 17.
 - [x] Thermal throttling detection & warning overlay
 - [x] Anomaly timeline with rolling baseline detection
 - [x] CPU governor tracking & display
-- [x] Session diff / comparison with delta visualization
 - [x] Quick Settings tile with live FPS
 - [x] Stress test mode with thermal ceiling detection
-- [x] Widget support
-- [x] CPU governor tracking
-- [x] Quick Settings tile
-- [x] Stress test mode
+- [x] Widget support (home screen)
 - [x] Battery stats (level, charge rate, charging status)
 - [x] Per-core CPU usage display
 - [x] GPU frequency reading
 - [x] Governor color-bands on performance graphs
+- [x] Storage I/O monitoring (read/write speed)
+- [x] Localization (Spanish, French, German, Chinese, Japanese)
+- [ ] Full Shizuku overlay (bypass SYSTEM_ALERT_WINDOW entirely)
+- [ ] Play Store listing & screenshots
 
 ## Inspired By
 

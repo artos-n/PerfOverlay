@@ -26,6 +26,7 @@ import dev.perfoverlay.util.AnomalyDetector
 import dev.perfoverlay.util.FpsMonitor
 import dev.perfoverlay.util.StatsCollector
 import dev.perfoverlay.util.ThrottleDetector
+import dev.perfoverlay.widget.PerfOverlayWidgetProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -59,6 +60,7 @@ class OverlayService : LifecycleService() {
     private var overlayView: ComposeView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     private var statsJob: Job? = null
+    private var widgetUpdateJob: Job? = null
     private val fpsMonitor = FpsMonitor()
     private val throttleDetector = ThrottleDetector()
     private val anomalyDetector = AnomalyDetector()
@@ -155,6 +157,15 @@ class OverlayService : LifecycleService() {
                     throttleState = throttleState,
                     anomalyCount = anomalyDetector.getAnomalyCount()
                 )
+
+                // Push stats to widget
+                PerfOverlayWidgetProvider.pushStats(
+                    applicationContext,
+                    fps,
+                    baseStats.cpuUsage,
+                    baseStats.gpuUsage
+                )
+
                 delay(config.value.refreshIntervalMs)
             }
         }

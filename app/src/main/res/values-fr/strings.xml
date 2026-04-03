@@ -2,5 +2,5 @@
 <resources>
     <string name="app_name">PerfOverlay</string>
     <string name="widget_name">PerfOverlay</string>
-    <string name="widget_description">Shows real-time FPS, CPU, GPU and temperature stats on your home screen</string>
+    <string name="widget_description">Affiche les statistiques FPS, CPU, GPU et température en temps réel sur votre écran d'accueil</string>
 </resources>

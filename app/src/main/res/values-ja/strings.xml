@@ -2,5 +2,5 @@
 <resources>
     <string name="app_name">PerfOverlay</string>
     <string name="widget_name">PerfOverlay</string>
-    <string name="widget_description">Shows real-time FPS, CPU, GPU and temperature stats on your home screen</string>
+    <string name="widget_description">ホーム画面にリアルタイムのFPS、CPU、GPU、温度統計を表示します</string>
 </resources>

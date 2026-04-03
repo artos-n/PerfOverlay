@@ -75,19 +75,6 @@
 
         <!-- Home screen widget -->
         <receiver
-            android:name=".widget.PerfOverlayWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="dev.perfoverlay.UPDATE_WIDGET" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info" />
-        </receiver>
-
-        <!-- Widget -->
-        <receiver
             android:name=".widget.PerfOverlayWidget"
             android:exported="true"
             android:label="@string/widget_name">
@@ -96,7 +83,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_perf_overlay_info" />
+                android:resource="@xml/widget_info" />
         </receiver>
 
         <service

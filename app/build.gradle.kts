@@ -12,8 +12,8 @@ android {
         applicationId = "dev.perfoverlay"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -21,13 +21,29 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // TODO: Replace with your actual release keystore before publishing to Play Store
+            // Store the keystore file in the workspace or use environment variables
+            // e.g. storeFile = file("keystore/perf-overlay.jks")
+            // For now, uses debug keystore for CI builds
+        }
+    }
+
     buildTypes {
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
+        }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // TODO: Add signing config before publishing
+            // signingConfig = signingConfigs.getByName("release")
         }
     }
 

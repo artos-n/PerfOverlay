@@ -381,9 +381,9 @@ private fun DeltaRow(
         else -> AccentRed
     }
     val arrow = when {
-        kotlin.math.abs(deltaPct) < 2f → "="
-        deltaPct > 0 → "↑"
-        else → "↓"
+        kotlin.math.abs(deltaPct) < 2f -> "="
+        deltaPct > 0 -> "->"
+        else -> "->"
     }
 
     Row(
@@ -399,7 +399,7 @@ private fun DeltaRow(
                 fontFamily = FontFamily.Monospace,
                 color = AccentBlue
             )
-            Text("→", fontSize = 10.sp, color = Color.White.copy(alpha = 0.3f))
+            Text("->", fontSize = 10.sp, color = Color.White.copy(alpha = 0.3f))
             Text(
                 "${String.format("%.0f", valueB)}",
                 fontSize = 12.sp,

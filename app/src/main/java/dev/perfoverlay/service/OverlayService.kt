@@ -15,31 +15,17 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import dev.perfoverlay.PerfOverlayApp
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.R
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.data.ConfigRepository
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.data.OverlayConfig
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.data.OverlayPosition
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.data.PerformanceStats
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.ui.component.OverlayView
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.ui.theme.PerfOverlayTheme
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.util.AnomalyDetector
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.util.FpsMonitor
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.util.StatsCollector
-import androidx.compose.ui.res.stringResource
 import dev.perfoverlay.util.ThrottleDetector
-import androidx.compose.ui.res.stringResource
-import dev.perfoverlay.widget.PerfOverlayWidget
-import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -169,17 +155,6 @@ class OverlayService : LifecycleService() {
                     throttleState = throttleState,
                     anomalyCount = anomalyDetector.getAnomalyCount()
                 )
-
-                // Push stats to widget
-                val maxTemp = maxOf(baseStats.cpuTemp, baseStats.gpuTemp)
-                PerfOverlayWidget.pushStats(
-                    applicationContext,
-                    fps,
-                    baseStats.cpuUsage,
-                    baseStats.gpuUsage,
-                    maxTemp
-                )
-
                 delay(config.value.refreshIntervalMs)
             }
         }
@@ -290,7 +265,7 @@ class OverlayService : LifecycleService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                stringResource(R.string.performance_overlay),
+                "Performance Overlay",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Shows performance stats on screen"
@@ -309,7 +284,7 @@ class OverlayService : LifecycleService() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("PerfOverlay")
-            .setContentText(stringResource(R.string.notification_text))
+            .setContentText("Monitoring performance")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

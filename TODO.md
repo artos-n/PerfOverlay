@@ -20,29 +20,23 @@
 - [x] ~~Anomaly timeline~~ — rolling baseline (30-sample window), 2σ spike detection, Room storage
 - [x] ~~Session diff / comparison~~ — side-by-side overlaid graphs, delta summary with color coding
 - [x] ~~CPU governor tracking~~ — read `scaling_governor` from sysfs, display in overlay
+- [x] ~~Governor on graphs~~ — color-band graph background by active governor mode (schedutil=green, performance=blue, powersave=purple)
 - [x] ~~Quick Settings tile~~ — FPS label, tap toggle, throttle warning subtitle
 - [x] ~~Stress test mode~~ — configurable CPU load generator, thermal ceiling detection, results dashboard
+- [x] ~~Battery stats~~ — battery level, charge rate, estimated time remaining
+- [x] ~~Per-core CPU~~ — show individual core usage (not just aggregate)
+- [x] ~~GPU frequency~~ — read GPU clock speed in addition to usage %
+- [x] ~~Storage I/O~~ — read/write speed monitoring from /proc/diskstats
+- [x] ~~Widget~~ — home screen widget showing current FPS/CPU/GPU/Temp
+- [x] ~~Localization~~ — support 5 languages (Spanish, French, German, Chinese, Japanese)
 
 ---
 
 ## 🔨 Remaining
 
-### Novel Features
-- [x] ~~Governor on graphs~~ — color-band graph background by active governor mode (schedutil=green, performance=blue, powersave=purple)
-
 ### Low Priority
 - [ ] **Full Shizuku overlay** — create overlay windows directly via Shizuku (bypass SYSTEM_ALERT_WINDOW entirely)
-- [ ] **Widget** — home screen widget showing current FPS/CPU
-- [x] ~~Battery stats~~ — battery level, charge rate, estimated time remaining
-- [x] ~~Per-core CPU~~ — show individual core usage (not just aggregate)
-- [x] ~~GPU frequency~~ — read GPU clock speed in addition to usage %
-- [ ] **Storage I/O** — read/write speed monitoring
-- [ ] **Localization** — support multiple languages
-
-### Polish
-- [x] ~~App icon~~ — proper high-res icon (512x512 Play Store, adaptive icon assets)
-- [ ] **Screenshot assets** — Play Store listing screenshots
-- [x] ~~CI/CD~~ — GitHub Actions workflow for APK builds
-- [ ] **Release signing** — configure release build signing
-- [ ] **ProGuard rules** — test minified release builds
-- [x] ~~Changelog~~ — maintain CHANGELOG.md per release
+- [ ] **Release signing** — configure release build signing with keystore
+- [ ] **ProGuard rules** — test minified release builds, add keep rules
+- [ ] **Play Store screenshots** — screenshot assets for Play Store listing
+- [ ] **App Store listing copy** — write compelling description, short description, feature bullets

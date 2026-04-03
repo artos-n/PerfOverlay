@@ -9,7 +9,7 @@
     <string name="btn_settings">Settings</string>
     <string name="btn_shizuku">Shizuku</string>
     <string name="performance_overlay">Performance Overlay</string>
-    <string name="overlay_active">Active - stats monitoring</string>
+    <string name="overlay_active">Active - monitoring stats</string>
     <string name="overlay_inactive">Inactive</string>
     <string name="live_stats">LIVE STATS</string>
     <string name="stats">STATS</string>
@@ -75,7 +75,7 @@
     <string name="result_cpu_freq_range">CPU Freq Range</string>
     <string name="result_throttle_events">Throttle Events</string>
     <string name="widget_name">PerfOverlay</string>
-    <string name="widget_description">Home screen showing real-time FPS, CPU, GPU and temperature stats</string>
+    <string name="widget_description">Shows real-time FPS, CPU, GPU and temperature stats on your home screen</string>
     <string name="notification_title">PerfOverlay</string>
     <string name="notification_text">Monitoring performance</string>
     <string name="notification_channel">Performance Overlay</string>

@@ -29,6 +29,8 @@
 - [x] ~~Storage I/O~~ — read/write speed monitoring from /proc/diskstats
 - [x] ~~Widget~~ — home screen widget showing current FPS/CPU/GPU/Temp
 - [x] ~~Localization~~ — support 5 languages (Spanish, French, German, Chinese, Japanese)
+- [x] ~~ProGuard rules~~ — comprehensive keep rules for Kotlin, Room, Shizuku, Compose
+- [x] ~~Release signing scaffold~~ — signing config setup, CI workflow improvements
 
 ---
 
@@ -36,7 +38,6 @@
 
 ### Low Priority
 - [ ] **Full Shizuku overlay** — create overlay windows directly via Shizuku (bypass SYSTEM_ALERT_WINDOW entirely)
-- [ ] **Release signing** — configure release build signing with keystore
-- [ ] **ProGuard rules** — test minified release builds, add keep rules
+- [ ] **Release signing** — add actual keystore before publishing to Play Store
 - [ ] **Play Store screenshots** — screenshot assets for Play Store listing
 - [ ] **App Store listing copy** — write compelling description, short description, feature bullets

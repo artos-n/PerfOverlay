@@ -150,11 +150,6 @@ private fun FullOverlayView(
             if (stats.anomalyCount > 0) {
                 AnomalyCountRow(stats.anomalyCount, config.scale, theme)
             }
-
-            // Storage I/O
-            if (config.showStorage) {
-                StorageRow(stats, config.scale, theme)
-            }
         }
     }
 }
@@ -217,6 +212,9 @@ private fun CompactOverlayView(
             if (config.showBattery) {
                 val chargeIcon = if (stats.isCharging) "⚡" else ""
                 CompactStatPill("BAT", "${stats.batteryLevel}%$chargeIcon", theme.accentInfo, config.scale)
+            }
+            if (config.showStorage && (stats.storageReadSpeed > 0 || stats.storageWriteSpeed > 0)) {
+                CompactStatPill("IO", "↓${StatsCollector.formatStorageSpeed(stats.storageReadSpeed)}", theme.accentSecondary, config.scale)
             }
         }
     }

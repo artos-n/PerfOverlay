@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -86,7 +87,7 @@ private fun FullOverlayView(
             if (config.showCpu) {
                 StatRow(
                     icon = Icons.Rounded.Memory,
-                    label = "CPU",
+                    label = stringResource(R.string.stat_cpu),
                     value = "${stats.cpuUsage.toInt()}%",
                     subValue = if (stats.cpuFrequency > 0) "${stats.cpuFrequency} MHz${if (stats.cpuGovernor.isNotEmpty()) " ${stats.cpuGovernor}" else ""}" else null,
                     color = theme.accentPrimary,
@@ -104,7 +105,7 @@ private fun FullOverlayView(
                 val gpuSub = if (stats.gpuFrequency > 0) "@ ${stats.gpuFrequency} MHz" else null
                 StatRow(
                     icon = Icons.Rounded.Games,
-                    label = "GPU",
+                    label = stringResource(R.string.stat_gpu),
                     value = "${stats.gpuUsage.toInt()}%",
                     subValue = gpuSub,
                     color = theme.accentSecondary,
@@ -116,7 +117,7 @@ private fun FullOverlayView(
             if (config.showRam) {
                 StatRow(
                     icon = Icons.Rounded.Storage,
-                    label = "RAM",
+                    label = stringResource(R.string.stat_ram),
                     value = "${stats.ramUsed}MB",
                     subValue = "/ ${stats.ramTotal}MB",
                     color = theme.accentInfo,
@@ -189,13 +190,13 @@ private fun CompactOverlayView(
 
             // Stat pills
             if (config.showCpu) {
-                CompactStatPill("CPU", "${stats.cpuUsage.toInt()}%", theme.accentPrimary, config.scale)
+                CompactStatPill(stringResource(R.string.stat_cpu), "${stats.cpuUsage.toInt()}%", theme.accentPrimary, config.scale)
             }
             if (config.showGpu) {
-                CompactStatPill("GPU", "${stats.gpuUsage.toInt()}%", theme.accentSecondary, config.scale)
+                CompactStatPill(stringResource(R.string.stat_gpu), "${stats.gpuUsage.toInt()}%", theme.accentSecondary, config.scale)
             }
             if (config.showRam) {
-                CompactStatPill("RAM", "${stats.ramUsed}MB", theme.accentInfo, config.scale)
+                CompactStatPill(stringResource(R.string.stat_ram), "${stats.ramUsed}MB", theme.accentInfo, config.scale)
             }
             if (config.showTemp) {
                 val tempStr = listOfNotNull(
@@ -278,7 +279,7 @@ private fun OverlayHeader(fps: Int, showFps: Boolean, scale: Float, theme: Overl
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "PERF",
+            text = stringResource(R.string.overlay_perf),
             fontSize = (10.sp * scale),
             fontWeight = FontWeight.Bold,
             color = Color.White.copy(alpha = 0.6f),
@@ -413,7 +414,7 @@ private fun TemperatureRow(stats: PerformanceStats, scale: Float, theme: Overlay
     ) {
         Icon(
             imageVector = Icons.Rounded.Thermostat,
-            contentDescription = "Temperature",
+            contentDescription = stringResource(R.string.cd_temperature),
             modifier = Modifier.size((14.dp * scale)),
             tint = theme.accentDanger
         )
@@ -443,7 +444,7 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float, theme: OverlayThem
     ) {
         Icon(
             imageVector = Icons.Rounded.Wifi,
-            contentDescription = "Network",
+            contentDescription = stringResource(R.string.stat_network),
             modifier = Modifier.size((14.dp * scale)),
             tint = theme.accentInfo
         )
@@ -477,7 +478,7 @@ private fun BatteryRow(stats: PerformanceStats, scale: Float, theme: OverlayThem
     ) {
         Icon(
             imageVector = if (stats.isCharging) Icons.Rounded.Bolt else Icons.Rounded.BatteryFull,
-            contentDescription = "Battery",
+            contentDescription = stringResource(R.string.cd_battery),
             modifier = Modifier.size((14.dp * scale)),
             tint = if (stats.isCharging) theme.accentSecondary else theme.accentInfo
         )
@@ -592,7 +593,7 @@ private fun FrameTimeStrip(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "FT",
+                text = stringResource(R.string.overlay_ft),
                 fontSize = (7.sp * scale),
                 color = Color.White.copy(alpha = 0.35f),
                 fontWeight = FontWeight.Medium,
@@ -717,7 +718,7 @@ private fun ThrottleWarningRow(
             tint = theme.accentDanger
         )
         Text(
-            text = "THROTTLED",
+            text = stringResource(R.string.overlay_throttled),
             fontSize = (8.sp * scale),
             fontWeight = FontWeight.Bold,
             color = theme.accentDanger,
@@ -756,7 +757,7 @@ private fun AnomalyCountRow(
     ) {
         Icon(
             imageVector = Icons.Rounded.Bolt,
-            contentDescription = "Anomalies",
+            contentDescription = stringResource(R.string.anomalies),
             modifier = Modifier.size((10.dp * scale)),
             tint = theme.accentWarn.copy(alpha = 0.6f)
         )
@@ -779,7 +780,7 @@ private fun StorageRow(stats: PerformanceStats, scale: Float, theme: OverlayThem
     ) {
         Icon(
             imageVector = Icons.Rounded.Storage,
-            contentDescription = "Storage I/O",
+            contentDescription = stringResource(R.string.stat_storage_io),
             modifier = Modifier.size((14.dp * scale)),
             tint = theme.accentInfo
         )

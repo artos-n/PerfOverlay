@@ -1,6 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App -->
     <string name="app_name">PerfOverlay</string>
+
+    <!-- Tabs -->
+    <string name="tab_overlay">悬浮窗</string>
+    <string name="tab_record">录制</string>
+    <string name="tab_stress">压力测试</string>
+
+    <!-- Overlay settings -->
+    <string name="overlay_permission_required">需要悬浮窗权限</string>
+    <string name="overlay_permission_desc">用于在其他应用上层显示性能数据</string>
+    <string name="btn_settings">设置</string>
+    <string name="btn_shizuku">⚡ Shizuku</string>
+    <string name="performance_overlay">性能悬浮窗</string>
+    <string name="overlay_active">运行中 — 正在监测</string>
+    <string name="overlay_inactive">未运行</string>
+    <string name="live_stats">实时数据</string>
+
+    <!-- Stats toggles -->
+    <string name="stats">显示项目</string>
+    <string name="stat_fps">帧率</string>
+    <string name="stat_frame_time">帧时间</string>
+    <string name="stat_cpu">处理器</string>
+    <string name="stat_gpu">显卡</string>
+    <string name="stat_ram">内存</string>
+    <string name="stat_temperature">温度</string>
+    <string name="stat_network">网络</string>
+    <string name="stat_battery">电池</string>
+    <string name="stat_storage_io">存储 I/O</string>
+
+    <!-- Appearance -->
+    <string name="appearance">外观</string>
+    <string name="compact_mode">简洁模式</string>
+    <string name="compact_mode_desc">最小化横向条</string>
+    <string name="background_blur">背景模糊</string>
+    <string name="background_blur_desc">毛玻璃效果 (Android 12+)</string>
+    <string name="opacity">透明度</string>
+    <string name="scale">缩放</string>
+
+    <!-- Theme -->
+    <string name="theme">主题</string>
+    <string name="theme_ocean">🌊 海洋</string>
+    <string name="theme_amethyst">💜 紫晶</string>
+    <string name="theme_emerald">💚 翡翠</string>
+    <string name="theme_sunset">🌅 日落</string>
+    <string name="theme_mono">⬜ 单色</string>
+    <string name="theme_cyber">⚡ 赛博</string>
+
+    <!-- Position -->
+    <string name="position">位置</string>
+    <string name="position_top_left">左上</string>
+    <string name="position_top_right">右上</string>
+    <string name="position_bottom_left">左下</string>
+    <string name="position_bottom_right">右下</string>
+    <string name="position_top_center">顶部居中</string>
+
+    <!-- Refresh rate -->
+    <string name="refresh_rate">刷新频率</string>
+
+    <!-- Shizuku -->
+    <string name="shizuku">Shizuku</string>
+    <string name="shizuku_connected">已连接 — 可自动授权</string>
+    <string name="shizuku_denied">权限被拒绝 — 打开 Shizuku 应用</string>
+    <string name="shizuku_not_running">未运行 — 请先启动 Shizuku</string>
+    <string name="shizuku_not_installed">未安装</string>
+
+    <!-- Overlay labels -->
+    <string name="overlay_perf">性能</string>
+    <string name="overlay_ft">帧时</string>
+    <string name="overlay_avg">均值</string>
+    <string name="overlay_p95">P95</string>
+    <string name="overlay_throttled">已降频</string>
+    <string name="overlay_anomaly">异常</string>
+    <string name="overlay_anomalies">异常</string>
+
+    <!-- Widget -->
     <string name="widget_name">PerfOverlay</string>
-    <string name="widget_description">在主屏幕上显示实时FPS、CPU、GPU和温度统计</string>
+    <string name="widget_description">在桌面显示实时帧率、CPU、GPU和温度</string>
+
+    <!-- Notification -->
+    <string name="notification_title">PerfOverlay</string>
+    <string name="notification_text">正在监测性能</string>
+    <string name="notification_channel">性能悬浮窗</string>
+
+    <!-- Recording screen -->
+    <string name="recordings">录制</string>
+    <string name="recording_in_progress">正在录制…</string>
+    <string name="recording_idle">捕获性能数据</string>
+    <string name="recording_session">录制中：%s</string>
+    <string name="btn_stop">停止</string>
+    <string name="btn_start_recording">开始录制</string>
+    <string name="past_recordings">历史录制</string>
+    <string name="no_recordings_yet">暂无录制</string>
+    <string name="no_recordings_desc">开始录制以捕获性能数据</string>
+    <string name="session_detail">会话详情</string>
+    <string name="not_enough_data">数据点不足，无法绘制图表</string>
+    <string name="delete">删除</string>
+    <string name="export_csv">导出 CSV</string>
+    <string name="export_json">导出 JSON</string>
+    <string name="export_success">%s 导出成功 ✓</string>
+    <string name="export_failed">导出失败</string>
+    <string name="graph_download">下载</string>
+    <string name="graph_upload">上传</string>
+    <string name="graph_dropped_frames">掉帧数</string>
+    <string name="anomalies">异常事件</string>
+    <string name="no_anomalies">未检测到异常</string>
+
+    <!-- Session compare -->
+    <string name="compare_sessions">对比会话</string>
+    <string name="select_sessions_hint">选择两个会话进行对比</string>
+    <string name="session_recordings">录制列表</string>
+    <string name="select">选择</string>
+
+    <!-- Stress test -->
+    <string name="stress_test_title">压力测试</string>
+    <string name="stress_running">运行中：%s / %s</string>
+    <string name="stress_idle">受控负载生成</string>
+    <string name="throttle_detected">⚠ 检测到 — CPU ↓%s%%</string>
+    <string name="btn_start_stress">开始压力测试</string>
+    <string name="result_duration">持续时间</string>
+    <string name="result_avg_cpu">平均 CPU</string>
+    <string name="result_avg_gpu">平均 GPU</string>
+    <string name="result_peak_cpu_temp">CPU 峰值温度</string>
+    <string name="result_peak_gpu_temp">GPU 峰值温度</string>
+    <string name="result_cpu_freq_range">CPU 频率范围</string>
+    <string name="result_throttle_events">降频次数</string>
 </resources>

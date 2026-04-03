@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">PerfOverlay</string>
+
+    <!-- Tabs -->
+    <string name="tab_overlay">ओवरले</string>
+    <string name="tab_record">रिकॉर्ड</string>
+    <string name="tab_stress">स्ट्रेस टेस्ट</string>
+
+    <!-- Overlay settings -->
+    <string name="overlay_permission_required">ओवरले अनुमति आवश्यक</string>
+    <string name="overlay_permission_desc">अन्य ऐप्स के ऊपर आँकड़े दिखाने के लिए आवश्यक</string>
+    <string name="btn_settings">सेटिंग्स</string>
+    <string name="btn_shizuku">⚡ Shizuku</string>
+    <string name="performance_overlay">परफॉर्मेंस ओवरले</string>
+    <string name="overlay_active">सक्रिय — मॉनिटरिंग</string>
+    <string name="overlay_inactive">निष्क्रिय</string>
+    <string name="live_stats">लाइव आँकड़े</string>
+
+    <!-- Stats toggles -->
+    <string name="stats">आँकड़े</string>
+    <string name="stat_fps">FPS</string>
+    <string name="stat_frame_time">फ्रेम समय</string>
+    <string name="stat_cpu">CPU</string>
+    <string name="stat_gpu">GPU</string>
+    <string name="stat_ram">RAM</string>
+    <string name="stat_temperature">तापमान</string>
+    <string name="stat_network">नेटवर्क</string>
+    <string name="stat_battery">बैटरी</string>
+    <string name="stat_storage_io">स्टोरेज I/O</string>
+
+    <!-- Appearance -->
+    <string name="appearance">दिखावट</string>
+    <string name="compact_mode">कॉम्पैक्ट मोड</string>
+    <string name="compact_mode_desc">न्यूनतम क्षैतिज बार</string>
+    <string name="background_blur">पृष्ठभूमि धुंधलापन</string>
+    <string name="background_blur_desc">फ्रॉस्टेड ग्लास इफेक्ट (Android 12+)</string>
+    <string name="opacity">अपारदर्शिता</string>
+    <string name="scale">स्केल</string>
+
+    <!-- Theme -->
+    <string name="theme">थीम</string>
+
+    <!-- Position -->
+    <string name="position">स्थिति</string>
+    <string name="position_top_left">ऊपर बाएँ</string>
+    <string name="position_top_right">ऊपर दाएँ</string>
+    <string name="position_bottom_left">नीचे बाएँ</string>
+    <string name="position_bottom_right">नीचे दाएँ</string>
+    <string name="position_top_center">ऊपर बीच में</string>
+
+    <!-- Shizuku -->
+    <string name="shizuku">Shizuku</string>
+    <string name="shizuku_connected">कनेक्टेड — अनुमति देने के लिए तैयार</string>
+    <string name="shizuku_denied">अनुमति अस्वीकृत — Shizuku ऐप खोलें</string>
+    <string name="shizuku_not_running">नहीं चल रहा — Shizuku शुरू करें</string>
+    <string name="shizuku_not_installed">इंस्टॉल नहीं</string>
+
+    <!-- Recording screen -->
+    <string name="recordings">रिकॉर्डिंग</string>
+    <string name="recording_in_progress">रिकॉर्डिंग जारी…</string>
+    <string name="recording_idle">परफॉर्मेंस डेटा कैप्चर करें</string>
+    <string name="btn_stop">रोकें</string>
+    <string name="btn_start_recording">रिकॉर्डिंग शुरू करें</string>
+    <string name="past_recordings">पिछली रिकॉर्डिंग</string>
+    <string name="no_recordings_yet">कोई रिकॉर्डिंग नहीं</string>
+    <string name="session_detail">सत्र विवरण</string>
+    <string name="delete">हटाएँ</string>
+    <string name="export_csv">CSV निर्यात</string>
+    <string name="export_json">JSON निर्यात</string>
+    <string name="export_success">%s निर्यात सफल ✓</string>
+    <string name="export_failed">निर्यात विफल</string>
+
+    <!-- Session compare -->
+    <string name="compare_sessions">सत्र तुलना</string>
+    <string name="select_sessions_hint">तुलना के लिए दो सत्र चुनें</string>
+
+    <!-- Stress test -->
+    <string name="stress_test_title">स्ट्रेस टेस्ट</string>
+    <string name="throttle_detected">⚠ डिटेक्टेड — CPU ↓%s%%</string>
+    <string name="btn_start_stress">स्ट्रेस टेस्ट शुरू करें</string>
+</resources>

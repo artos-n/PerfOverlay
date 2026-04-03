@@ -1,3 +1,11 @@
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import dev.perfoverlay.PerfOverlayApp
+import dev.perfoverlay.R
+import dev.perfoverlay.data.*
+import androidx.compose.ui.res.stringResource
+
 StatToggle("Battery", Icons.Rounded.BatteryFull, config.showBattery) { updateConfig(config.copy(showBattery = it)) }
                 StatToggle("Storage I/O", Icons.Rounded.Storage, config.showStorage) { updateConfig(config.copy(showStorage = it)) }
                 if (config.showBattery) {

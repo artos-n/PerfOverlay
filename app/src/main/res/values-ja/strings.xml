@@ -1,6 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App -->
     <string name="app_name">PerfOverlay</string>
-    <string name="widget_name">PerfOverlay</string>
-    <string name="widget_description">ホーム画面にリアルタイムのFPS、CPU、GPU、温度統計を表示します</string>
+
+    <!-- Tabs -->
+    <string name="tab_overlay">オーバーレイ</string>
+    <string name="tab_record">録画</string>
+    <string name="tab_stress">ストレステスト</string>
+
+    <!-- Overlay settings -->
+    <string name="overlay_permission_required">オーバーレイ権限が必要です</string>
+    <string name="overlay_permission_desc">他のアプリの上に統計を表示するために必要です</string>
+    <string name="btn_settings">設定</string>
+    <string name="btn_shizuku">⚡ Shizuku</string>
+    <string name="performance_overlay">パフォーマンスオーバーレイ</string>
+    <string name="overlay_active">実行中 — 監視中</string>
+    <string name="overlay_inactive">停止中</string>
+    <string name="live_stats">ライブ統計</string>
+
+    <!-- Stats toggles -->
+    <string name="stats">統計</string>
+    <string name="stat_fps">FPS</string>
+    <string name="stat_frame_time">フレーム時間</string>
+    <string name="stat_cpu">CPU</string>
+    <string name="stat_gpu">GPU</string>
+    <string name="stat_ram">RAM</string>
+    <string name="stat_temperature">温度</string>
+    <string name="stat_network">ネットワーク</string>
+    <string name="stat_battery">バッテリー</string>
+    <string name="stat_storage_io">ストレージ I/O</string>
+
+    <!-- Appearance -->
+    <string name="appearance">外観</string>
+    <string name="compact_mode">コンパクトモード</string>
+    <string name="compact_mode_desc">最小限の水平バー</string>
+    <string name="background_blur">背景ぼかし</string>
+    <string name="background_blur_desc">フルードガラス効果 (Android 12+)</string>
+    <string name="opacity">不透明度</string>
+    <string name="scale">スケール</string>
+
+    <!-- Theme -->
+    <string name="theme">テーマ</string>
+
+    <!-- Position -->
+    <string name="position">位置</string>
+    <string name="position_top_left">左上</string>
+    <string name="position_top_right">右上</string>
+    <string name="position_bottom_left">左下</string>
+    <string name="position_bottom_right">右下</string>
+    <string name="position_top_center">上中央</string>
+
+    <!-- Shizuku -->
+    <string name="shizuku">Shizuku</string>
+    <string name="shizuku_connected">接続済み — 権限付与の準備完了</string>
+    <string name="shizuku_denied">権限が拒否されました — Shizukuアプリを開いてください</string>
+    <string name="shizuku_not_running">実行されていません — Shizukuを起動してください</string>
+    <string name="shizuku_not_installed">インストールされていません</string>
+
+    <!-- Recording screen -->
+    <string name="recordings">録画</string>
+    <string name="recording_in_progress">録画中…</string>
+    <string name="recording_idle">パフォーマンスデータをキャプチャ</string>
+    <string name="btn_stop">停止</string>
+    <string name="btn_start_recording">録画開始</string>
+    <string name="past_recordings">過去の録画</string>
+    <string name="no_recordings_yet">録画がありません</string>
+    <string name="session_detail">セッション詳細</string>
+    <string name="delete">削除</string>
+    <string name="export_csv">CSV出力</string>
+    <string name="export_json">JSON出力</string>
+    <string name="export_success">%s 出力完了 ✓</string>
+    <string name="export_failed">出力失敗</string>
+
+    <!-- Session compare -->
+    <string name="compare_sessions">セッション比較</string>
+    <string name="select_sessions_hint">比較する2つのセッションを選択</string>
+
+    <!-- Stress test -->
+    <string name="stress_test_title">ストレステスト</string>
+    <string name="throttle_detected">⚠ 検出 — CPU ↓%s%%</string>
+    <string name="btn_start_stress">ストレステスト開始</string>
 </resources>

@@ -6,6 +6,11 @@ Real-time performance overlay for Android. FPS, CPU, GPU, temperatures, RAM, and
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9-purple?logo=kotlin&logoColor=white)
 ![Compose UI](https://img.shields.io/badge/Compose-UI-blue)
 ![License MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![FOSS](https://img.shields.io/badge/FOSS-Free%20%26%20Open%20Source-brightgreen)
+[![GitHub Release](https://img.shields.io/github/v/release/artos-n/PerfOverlay?include_prereleases&label=latest)](https://github.com/artos-n/PerfOverlay/releases)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Not%20yet%20published-orange)](https://f-droid.org/)
+
+**Free and open source. No ads. No tracking. No bullshit.**
 
 ## Features
 
@@ -121,7 +126,14 @@ Requires Android Studio Hedgehog+ and JDK 17.
 - [x] Storage I/O monitoring (read/write speed)
 - [x] Localization (Spanish, French, German, Chinese, Japanese)
 - [ ] Full Shizuku overlay (bypass SYSTEM_ALERT_WINDOW entirely)
-- [ ] Play Store listing & screenshots
+
+## Install
+
+### GitHub Releases (APK)
+Download the latest APK from the [Releases page](https://github.com/artos-n/PerfOverlay/releases).
+
+### F-Droid
+PerfOverlay will be published on [F-Droid](https://f-droid.org/) once the build is verified. Track progress [here](https://github.com/artos-n/PerfOverlay/issues).
 
 ## Inspired By
 

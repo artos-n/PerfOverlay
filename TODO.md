@@ -26,9 +26,9 @@
 - [x] ~~Battery stats~~ — battery level, charge rate, estimated time remaining
 - [x] ~~Per-core CPU~~ — show individual core usage (not just aggregate)
 - [x] ~~GPU frequency~~ — read GPU clock speed in addition to usage %
-- [x] ~~Storage I/O~~ — read/write speed monitoring from /proc/diskstats
-- [x] ~~Widget~~ — home screen widget showing current FPS/CPU/GPU/Temp
-- [x] ~~Localization~~ — support 5 languages (Spanish, French, German, Chinese, Japanese)
+- [x] Storage I/O monitoring (read/write speed from /proc/diskstats)
+- [x] Home screen widget (FPS / CPU / GPU / temp)
+- [x] Localization framework (EN, ZH, JA, KO, HI)
 - [x] ~~ProGuard rules~~ — comprehensive keep rules for Kotlin, Room, Shizuku, Compose
 - [x] ~~Release signing scaffold~~ — signing config setup, CI workflow improvements
 
@@ -37,6 +37,12 @@
 ## 🔨 Remaining
 
 ### Low Priority
+- [x] ~~Battery stats~~ — battery level, charge rate, charging status
+- [x] ~~Per-core CPU~~ — show individual core usage (not just aggregate)
+- [x] ~~GPU frequency~~ — read GPU clock speed in addition to usage %
+- [ ] **ProGuard rules** — test minified release builds
+- [ ] **Release signing** — configure release build signing
+- [ ] **Play Store screenshot assets** — Play Store listing screenshots
 - [ ] **Full Shizuku overlay** — create overlay windows directly via Shizuku (bypass SYSTEM_ALERT_WINDOW entirely)
 - [ ] **Release signing** — add actual keystore before publishing to Play Store
 - [ ] **Play Store screenshots** — screenshot assets for Play Store listing

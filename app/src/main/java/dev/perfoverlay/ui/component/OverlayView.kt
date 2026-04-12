@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -87,7 +86,7 @@ private fun FullOverlayView(
             if (config.showCpu) {
                 StatRow(
                     icon = Icons.Rounded.Memory,
-                    label = stringResource(R.string.stat_cpu),
+                    label = "CPU",
                     value = "${stats.cpuUsage.toInt()}%",
                     subValue = if (stats.cpuFrequency > 0) "${stats.cpuFrequency} MHz${if (stats.cpuGovernor.isNotEmpty()) " ${stats.cpuGovernor}" else ""}" else null,
                     color = theme.accentPrimary,
@@ -105,7 +104,7 @@ private fun FullOverlayView(
                 val gpuSub = if (stats.gpuFrequency > 0) "@ ${stats.gpuFrequency} MHz" else null
                 StatRow(
                     icon = Icons.Rounded.Games,
-                    label = stringResource(R.string.stat_gpu),
+                    label = "GPU",
                     value = "${stats.gpuUsage.toInt()}%",
                     subValue = gpuSub,
                     color = theme.accentSecondary,
@@ -117,7 +116,7 @@ private fun FullOverlayView(
             if (config.showRam) {
                 StatRow(
                     icon = Icons.Rounded.Storage,
-                    label = stringResource(R.string.stat_ram),
+                    label = "RAM",
                     value = "${stats.ramUsed}MB",
                     subValue = "/ ${stats.ramTotal}MB",
                     color = theme.accentInfo,
@@ -136,10 +135,6 @@ private fun FullOverlayView(
 
             if (config.showNetwork) {
                 NetworkRow(stats, config.scale, theme)
-            }
-
-            if (config.showStorage) {
-                StorageRow(stats, config.scale, theme)
             }
 
             // Throttle warning
@@ -190,13 +185,13 @@ private fun CompactOverlayView(
 
             // Stat pills
             if (config.showCpu) {
-                CompactStatPill(stringResource(R.string.stat_cpu), "${stats.cpuUsage.toInt()}%", theme.accentPrimary, config.scale)
+                CompactStatPill("CPU", "${stats.cpuUsage.toInt()}%", theme.accentPrimary, config.scale)
             }
             if (config.showGpu) {
-                CompactStatPill(stringResource(R.string.stat_gpu), "${stats.gpuUsage.toInt()}%", theme.accentSecondary, config.scale)
+                CompactStatPill("GPU", "${stats.gpuUsage.toInt()}%", theme.accentSecondary, config.scale)
             }
             if (config.showRam) {
-                CompactStatPill(stringResource(R.string.stat_ram), "${stats.ramUsed}MB", theme.accentInfo, config.scale)
+                CompactStatPill("RAM", "${stats.ramUsed}MB", theme.accentInfo, config.scale)
             }
             if (config.showTemp) {
                 val tempStr = listOfNotNull(
@@ -213,9 +208,6 @@ private fun CompactOverlayView(
             if (config.showBattery) {
                 val chargeIcon = if (stats.isCharging) "⚡" else ""
                 CompactStatPill("BAT", "${stats.batteryLevel}%$chargeIcon", theme.accentInfo, config.scale)
-            }
-            if (config.showStorage && (stats.storageReadSpeed > 0 || stats.storageWriteSpeed > 0)) {
-                CompactStatPill("IO", "↓${StatsCollector.formatStorageSpeed(stats.storageReadSpeed)}", theme.accentSecondary, config.scale)
             }
         }
     }
@@ -279,7 +271,7 @@ private fun OverlayHeader(fps: Int, showFps: Boolean, scale: Float, theme: Overl
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(R.string.overlay_perf),
+            text = "PERF",
             fontSize = (10.sp * scale),
             fontWeight = FontWeight.Bold,
             color = Color.White.copy(alpha = 0.6f),
@@ -414,7 +406,7 @@ private fun TemperatureRow(stats: PerformanceStats, scale: Float, theme: Overlay
     ) {
         Icon(
             imageVector = Icons.Rounded.Thermostat,
-            contentDescription = stringResource(R.string.cd_temperature),
+            contentDescription = "Temperature",
             modifier = Modifier.size((14.dp * scale)),
             tint = theme.accentDanger
         )
@@ -444,7 +436,7 @@ private fun NetworkRow(stats: PerformanceStats, scale: Float, theme: OverlayThem
     ) {
         Icon(
             imageVector = Icons.Rounded.Wifi,
-            contentDescription = stringResource(R.string.stat_network),
+            contentDescription = "Network",
             modifier = Modifier.size((14.dp * scale)),
             tint = theme.accentInfo
         )
@@ -478,7 +470,7 @@ private fun BatteryRow(stats: PerformanceStats, scale: Float, theme: OverlayThem
     ) {
         Icon(
             imageVector = if (stats.isCharging) Icons.Rounded.Bolt else Icons.Rounded.BatteryFull,
-            contentDescription = stringResource(R.string.cd_battery),
+            contentDescription = "Battery",
             modifier = Modifier.size((14.dp * scale)),
             tint = if (stats.isCharging) theme.accentSecondary else theme.accentInfo
         )
@@ -593,7 +585,7 @@ private fun FrameTimeStrip(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.overlay_ft),
+                text = "FT",
                 fontSize = (7.sp * scale),
                 color = Color.White.copy(alpha = 0.35f),
                 fontWeight = FontWeight.Medium,
@@ -718,7 +710,7 @@ private fun ThrottleWarningRow(
             tint = theme.accentDanger
         )
         Text(
-            text = stringResource(R.string.overlay_throttled),
+            text = "THROTTLED",
             fontSize = (8.sp * scale),
             fontWeight = FontWeight.Bold,
             color = theme.accentDanger,
@@ -757,7 +749,7 @@ private fun AnomalyCountRow(
     ) {
         Icon(
             imageVector = Icons.Rounded.Bolt,
-            contentDescription = stringResource(R.string.anomalies),
+            contentDescription = "Anomalies",
             modifier = Modifier.size((10.dp * scale)),
             tint = theme.accentWarn.copy(alpha = 0.6f)
         )
@@ -768,75 +760,6 @@ private fun AnomalyCountRow(
             fontFamily = FontFamily.Monospace,
             color = theme.accentWarn.copy(alpha = 0.6f)
         )
-    }
-}
-
-@Composable
-private fun StorageRow(stats: PerformanceStats, scale: Float, theme: OverlayTheme) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp * scale)
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Storage,
-            contentDescription = stringResource(R.string.stat_storage_io),
-            modifier = Modifier.size((14.dp * scale)),
-            tint = theme.accentInfo
-        )
-
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "STORAGE",
-                    fontSize = (11.sp * scale),
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp * scale)) {
-                    Text(
-                        text = "↓ ${StatsCollector.formatStorageSpeed(stats.storageReadSpeed)}",
-                        fontSize = (10.sp * scale),
-                        fontFamily = FontFamily.Monospace,
-                        color = theme.accentSecondary
-                    )
-                    Text(
-                        text = "↑ ${StatsCollector.formatStorageSpeed(stats.storageWriteSpeed)}",
-                        fontSize = (10.sp * scale),
-                        fontFamily = FontFamily.Monospace,
-                        color = theme.accentPrimary
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(3.dp * scale))
-            // Combined I/O bar
-            val totalIO = (stats.storageReadSpeed + stats.storageWriteSpeed).coerceAtLeast(1)
-            val readFraction = stats.storageReadSpeed.toFloat() / totalIO
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height((4.dp * scale))
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Color.White.copy(alpha = 0.1f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(readFraction.coerceIn(0f, 1f))
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(theme.accentSecondary.copy(alpha = 0.7f))
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(stats.storageWriteSpeed.toFloat() / totalIO.coerceAtLeast(1))
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(theme.accentPrimary.copy(alpha = 0.7f))
-                )
-            }
-        }
     }
 }
 

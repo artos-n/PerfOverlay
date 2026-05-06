@@ -142,3 +142,4 @@ PerfOverlay will be published on [F-Droid](https://f-droid.org/) once the build 
 ## License
 
 [MIT](LICENSE) © 2026 artos
+<!-- $(date -u) -->
